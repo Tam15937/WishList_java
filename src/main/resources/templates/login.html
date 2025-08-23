@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Вход в Wishlist Hub</title>
+    <link rel="stylesheet" th:href="@{/css/login.css}" />
+</head>
+<body>
+<div class="container">
+    <form id="loginForm" action="/login" method="post">
+        <input type="text" id="username" name="username" required />
+        <input type="password" id="password" name="password" required />
+        <button type="submit">Войти</button>
+        <p id="errorMsg" style="color:red;min-height:30px;margin-top:9px;"></p>
+    </form>
+</div>
+<script th:src="@{/js/login.js}"></script>
+</body>
+</html>

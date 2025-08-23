@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Wishlist Hub</title>
+    <link rel="stylesheet" href="/css/home.css" />
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="container">
+    <aside class="sidebar left" id="usersList">
+        <h2>Wish листы</h2>
+        <ul id="userItems"></ul>
+    </aside>
+
+    <main class="main-content" id="wishlistBlock">
+        <div id="wishlistContent">
+            <p>Выберите пользователя слева, чтобы увидеть его wishlist.</p>
+        </div>
+    </main>
+
+    <aside class="sidebar right">
+        <div id="userInfo" style="margin-bottom: 20px;">
+            <form method="post" action="/perform_logout">
+                <button id="logoutBtn" type="submit" style="background: #f44336;">Выйти</button>
+            </form>
+        </div>
+
+        <button id="createListBtn">Создать свой лист</button>
+        <div id="deleteSection" style="margin-top: 20px;"></div>
+    </aside>
+</div>
+
+<script src="/js/home.js"></script>
+</body>
+</html>

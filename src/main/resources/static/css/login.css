@@ -1,0 +1,85 @@
+/* Базовые стили, как в основном style.css */
+
+body {
+	font-size: 22px;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f7f7fa;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+    justify-content: center;   /* по горизонтали выравниваем форму по центру */
+    align-items: center;       /* по вертикали центрируем */
+    padding: 24px 16px;        /* padding увеличен с 24px 16px (примерно 1.5x) */
+    box-sizing: border-box;
+}
+
+/* Форма входа, максимальная ширина 400px и растягиваем по ширине контейнера */
+
+form#loginForm {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 80vw;          /* Теперь ширина 80% от окна браузера */
+    background: #fff;
+    padding: 24px 16px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.1);
+}
+
+/* Заголовок формы */
+
+form#loginForm h2 {
+    margin: 0 0 18px 0;        /* увеличены отступы */
+    font-weight: normal;
+    color: #333;
+    font-size: 1.8em;          /* 1.2em * 1.5 */
+    text-align: center;
+}
+
+/* Поля ввода, с увеличенным padding и границами как в основном css */
+
+form#loginForm input[type="text"],
+form#loginForm input[type="password"] {
+    padding: 15px 16px;        /* 10px * 1.5 и сохранение горизонтальных */
+    font-size: 1.65em;         /* 1.1em * 1.5 */
+    border: 1px solid #ccc;
+    border-radius: 6px;        /* 4px * 1.5 */
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* Кнопка отправки (Войти) */
+
+form#loginForm button[type="submit"] {
+    padding: 15px 27px;        /* 10px 18px * 1.5 */
+    font-size: 1.5em;          /* 1em * 1.5 */
+    border: none;
+    border-radius: 6px;        /* 4px * 1.5 */
+    background: #2196f3;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Наведение на кнопку */
+
+form#loginForm button[type="submit"]:hover {
+    background-color: #0b7dda;
+}
+
+/* Сообщение ошибки под кнопкой */
+
+#errorMsg {
+    color: red;
+    text-align: center;
+    min-height: 30px;          /* увеличено с 20px */
+    margin-top: 9px;           /* 6px * 1.5 */
+    font-size: 1.5em;          /* 1em * 1.5 */
+}
+
+
