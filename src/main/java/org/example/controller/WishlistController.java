@@ -5,8 +5,8 @@ import org.example.service.WishlistService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -25,5 +25,34 @@ public class WishlistController {
         }
         List<Wishlist> wishlists = wishlistService.findByUsername(userDetails.getUsername());
         return ResponseEntity.ok(wishlists);
+    }
+
+    @PostMapping("/api/create_list")
+    public ResponseEntity<?> createList(@AuthenticationPrincipal UserDetails userDetails,
+                                        @RequestBody Wishlist wishlist) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        wishlist.setUsername(userDetails.getUsername());
+        // Генерация ID, если нужно (можно заменить на более надежный способ)
+        if (wishlist.getId() == 0) {
+            wishlist.setId(System.currentTimeMillis());
+        }
+        wishlistService.addWishlist(wishlist);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/api/delete_list/{id}")
+    public ResponseEntity<?> deleteList(@AuthenticationPrincipal UserDetails userDetails,
+                                        @PathVariable long id) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        boolean deleted = wishlistService.deleteWishlist(id, userDetails.getUsername());
+        if (deleted) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(403).body("Недостаточно прав для удаления списка");
+        }
     }
 }

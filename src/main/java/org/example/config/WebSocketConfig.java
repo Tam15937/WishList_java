@@ -12,14 +12,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Конечная точка WebSocket (с SockJS fallback)
+        // Регистрируем конечную точку для WebSocket соединений с поддержкой SockJS fallback
         registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // Префиксы для рассылки сообщений
+        // Включаем простой брокер сообщений с префиксами для рассылки сообщений
         registry.enableSimpleBroker("/topic", "/queue");
+        // Префикс для сообщений от клиента, которые будут направлены контроллерам @MessageMapping
         registry.setApplicationDestinationPrefixes("/app");
     }
 }

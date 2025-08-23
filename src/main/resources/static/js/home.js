@@ -1,23 +1,30 @@
 let users = [];
 let selectedUserId = null;
 
-const socket = io({
-  withCredentials: true
+// Подключаемся к эндпоинту Spring WebSocket с SockJS fallback
+const socket = new SockJS('/ws');
+const stompClient = Stomp.over(socket);
+
+stompClient.connect({}, function (frame) {
+    console.log('Подключены к серверу WebSocket: ' + frame);
+
+    // Подписываемся на обновления wishlist
+    stompClient.subscribe('/topic/wishlist', function (messageOutput) {
+        console.log('Получено обновление от сервера:', messageOutput.body);
+        loadUsers();
+    });
+}, function (error) {
+    console.error('Ошибка подключения к WebSocket:', error);
 });
 
-socket.on('connect', () => {
-    console.log('Подключены к серверу WebSocket');
-});
+// Функция отправки сообщения обновления wishlist
+function sendWishlistUpdate(data) {
+    if (stompClient && stompClient.connected) {
+        stompClient.send("/app/wishlist/update", {}, data);
+    }
+}
 
-socket.on('update', () => {
-    console.log('Получено обновление от сервера');
-    loadUsers();
-});
-
-socket.on('disconnect', () => {
-    console.log('Отключены от сервера WebSocket');
-});
-
+// Загрузка пользователей и списков - без изменений
 async function loadUsers() {
     try {
         const res = await fetch('/api/users');
