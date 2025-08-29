@@ -62,7 +62,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     /**
-     * Метод для аутентификации или создания пользователя с сохранением в JSON (по примеру вашего UserAuthService)
+     * Метод для аутентификации или создания пользователя с сохранением в JSON
      */
     public User authenticateOrCreateUser(String username, String password) {
         User user = userMap.get(username);

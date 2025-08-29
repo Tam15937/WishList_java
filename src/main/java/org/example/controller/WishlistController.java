@@ -3,6 +3,8 @@ package org.example.controller;
 import org.example.model.Wishlist;
 import org.example.service.WishlistService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -54,5 +56,12 @@ public class WishlistController {
         } else {
             return ResponseEntity.status(403).body("Недостаточно прав для удаления списка");
         }
+    }
+
+    @MessageMapping("/wishlist/update")
+    @SendTo("/topic/wishlist")
+    public String handleWishlistUpdate(String message) {
+        // Тут можно обработать сообщение, например, сохранить обновление
+        return message; // Ответ будет отправлен
     }
 }

@@ -42,9 +42,15 @@ public class SecurityConfig {
                         .deleteCookies("JSESSIONID", "username", "user_id")
                         .permitAll()
                 );
-
         return http.build();
     }
+    //Контроллеры, аннотации к ним, аргументы к ним, разница между Get и Post
+    //Что такое Join, как работают, чем отличаются, и GroupBy
+    //TODO логирование log4g
+    //TODO Валидация, проверка инпутов
+    //TODO Базаданных с начальными данными
+    //TODO Сложность сортировок, сортировки какие есть
+    //TODO Сложность операций в коллекциях
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -53,6 +59,7 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(NoOpPasswordEncoder.getInstance()); // или BCryptPasswordEncoder
         return authProvider;
     }
+
     @Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
         return (request, response, authentication) -> {
