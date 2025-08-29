@@ -10,9 +10,4 @@ public class MainController {
     public String homePage() {
         return "home";
     }
-    @GetMapping("/login")
-    public String loginPage() {
-        // Возвращаем имя файла login.html из ресурсов (без расширения и пути)
-        return "login";
-    }
 }

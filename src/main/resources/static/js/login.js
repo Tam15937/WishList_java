@@ -16,26 +16,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const resp = await fetch('/login', {
+            const response = await fetch('/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
             });
 
-            const text = await resp.text();
-            console.log('Response text:', text);
-
-            try {
-                const data = JSON.parse(text);
-                if (resp.ok) {
-                    window.location.href = '/';
-                } else {
-                    errorMsg.textContent = data.error || 'Ошибка входа';
-                }
-            } catch (e) {
-                console.error('Ошибка парсинга JSON:', e);
-                errorMsg.textContent = 'Неверный ответ от сервера';
+            if (!response.ok) {
+                const errorData = await response.json();
+                errorMsg.textContent = errorData.error || 'Ошибка входа';
+                return;
             }
-           }
+
+            const data = await response.json();
+            if (data.token) {
+                localStorage.setItem('authToken', data.token);
+                // Можно сохранить username для отображения в UI, например
+                localStorage.setItem('username', username);
+                window.location.href = '/';
+            } else {
+                errorMsg.textContent = 'Ошибка: токен не получен';
+            }
+        } catch (error) {
+            console.error('Ошибка при запросе на логин:', error);
+            errorMsg.textContent = 'Ошибка соединения с сервером';
+        }
     };
 });

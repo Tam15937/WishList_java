@@ -2,7 +2,9 @@ package org.example.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.model.User;
+import org.example.CustomUserDetails;
+import org.example.model.UserModel;
+import org.example.repository.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,68 +18,41 @@ import java.util.*;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private final File file = Paths.get("users.json").toFile(); // путь к JSON файлу с пользователями
+    private final UserRepository userRepository;
 
-    private Map<String, User> userMap = new HashMap<>();  // ключ - username
-
-    public CustomUserDetailsService() {
-        loadUsers();
+    public CustomUserDetailsService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    private void loadUsers() {
-        try {
-            if (file.exists()) {
-                List<User> users = objectMapper.readValue(file, new TypeReference<List<User>>() {});
-                for (User user : users) {
-                    userMap.put(user.getUsername(), user);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void saveUsers() {
-        try {
-            objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, userMap.values());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+    // По username для стандартной аутентификации
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userMap.get(username);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found");
-        }
-        // Здесь по желанию добавьте роли/права
-        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
-
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                authorities);
+        UserModel user = userRepository.findByName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return new CustomUserDetails(user);
     }
 
-    /**
-     * Метод для аутентификации или создания пользователя с сохранением в JSON
-     */
-    public User authenticateOrCreateUser(String username, String password) {
-        User user = userMap.get(username);
-        if (user == null) {
-            // создать нового пользователя
-            String id = UUID.randomUUID().toString();
-            user = new User(id, username, password);
-            userMap.put(username, user);
-            saveUsers();
-        } else {
-            // проверка пароля
-            if (!user.getPassword().equals(password)) {
-                throw new UsernameNotFoundException("Неверный пароль");
-            }
-        }
-        return user;
+    // По токену для фильтра
+    public UserDetails loadUserByToken(String token) {
+        UserModel user = userRepository.findByAuthToken(token)
+                .orElse(null);
+        if (user == null) return null;
+        return new CustomUserDetails(user);
+    }
+
+    // Генерация и сохранение токена при логине
+    public String generateAndSaveToken(UserModel user) {
+        String token = UUID.randomUUID().toString();
+        user.setAuthToken(token);
+        userRepository.save(user);
+        return token;
+    }
+
+    public void logout(String token) {
+        Optional<UserModel> userOpt = userRepository.findByAuthToken(token);
+        userOpt.ifPresent(user -> {
+            user.setAuthToken(null);
+            userRepository.save(user);
+        });
     }
 }
