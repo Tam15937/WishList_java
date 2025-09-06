@@ -1,13 +1,21 @@
 package org.example.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.List;
 
+
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
 @Table(name = "lists")
 public class ListModel {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -15,24 +23,11 @@ public class ListModel {
     @NotBlank
     private String name;
 
-    @Column(nullable = false)
-    private Long userId; // владелец списка
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserModel user;
 
     @OneToMany(mappedBy = "list", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value = "list")
     private List<ListItemModel> items;
-
-    public ListModel() {}
-
-    // геттеры и сеттеры
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-
-    public List<ListItemModel> getItems() { return items; }
-    public void setItems(List<ListItemModel> items) { this.items = items; }
 }

@@ -2,8 +2,10 @@ package org.example.service;
 
 import org.example.model.ListItemModel;
 import org.example.model.ListModel;
+import org.example.model.UserModel;
 import org.example.repository.ListItemRepository;
 import org.example.repository.ListRepository;
+import org.example.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,82 +17,71 @@ public class WishlistService {
 
     private final ListRepository listRepository;
     private final ListItemRepository itemRepository;
+    private final UserRepository userRepository;
 
-    public WishlistService(ListRepository listRepository, ListItemRepository itemRepository) {
+    public WishlistService(ListRepository listRepository, ListItemRepository itemRepository, UserRepository userRepository) {
         this.listRepository = listRepository;
         this.itemRepository = itemRepository;
+        this.userRepository = userRepository;
     }
 
-    // Получить все списки пользователя по userId
-    public List<ListModel> findByUserId(Long userId) {
-        return listRepository.findByUserId(userId);
+    public List<ListModel> findListsByUser(UserModel user) {
+        return listRepository.findByUser(user);
     }
 
-    // Создать или обновить список вместе с элементами
     @Transactional
-    public ListModel addWishlist(ListModel wishlist) {
+    public ListModel saveWishlist(ListModel wishlist) {
         if (wishlist.getItems() != null) {
             wishlist.getItems().forEach(item -> item.setList(wishlist));
         }
         return listRepository.save(wishlist);
     }
 
-    // Удалить список по id и userId
     @Transactional
-    public boolean deleteWishlist(Long id, Long userId) {
-        Optional<ListModel> listOpt = listRepository.findById(id);
-        if (listOpt.isPresent() && listOpt.get().getUserId().equals(userId)) {
-            listRepository.deleteById(id);
+    public boolean deleteWishlist(ListModel list, UserModel user) {
+        if (list.getUser().equals(user)) {
+            listRepository.delete(list);
             return true;
         }
         return false;
     }
 
-    // Добавить предмет в список
+    public List<ListItemModel> findItemsByList(ListModel list) {
+        return itemRepository.findByList(list);
+    }
+
     @Transactional
-    public ListItemModel addItemToList(Long listId, ListItemModel item) {
-        ListModel list = listRepository.findById(listId)
-                .orElseThrow(() -> new RuntimeException("List not found"));
+    public ListItemModel addItemToList(ListModel list, ListItemModel item) {
         item.setList(list);
         return itemRepository.save(item);
     }
 
-    // Удалить предмет по id
     @Transactional
-    public boolean deleteItemById(Long itemId) {
-        if (itemRepository.existsById(itemId)) {
-            itemRepository.deleteById(itemId);
+    public boolean deleteItem(ListItemModel item) {
+        if (itemRepository.existsById(item.getId())) {
+            itemRepository.delete(item);
             return true;
         }
         return false;
     }
 
-    // Переключить статус taken у предмета списка
     @Transactional
-    public boolean toggleItemById(Long itemId, Long currentUserId) {
-        Optional<ListItemModel> optionalItem = itemRepository.findById(itemId);
-        if (optionalItem.isEmpty()) {
-            return false;
-        }
-
-        ListItemModel item = optionalItem.get();
-
+    public boolean toggleItem(ListItemModel item, UserModel currentUser) {
         if (item.isTaken()) {
-            // Снимаем метку, только если текущий пользователь - владелец метки
-            if (item.getTakenByUserId() != null && item.getTakenByUserId().equals(currentUserId)) {
+            if (item.getTakenByUser() != null && item.getTakenByUser().equals(currentUser)) {
                 item.setTaken(false);
-                item.setTakenByUserId(null);
+                item.setTakenByUser(null);
             } else {
                 return false;
             }
         } else {
-            // Ставим метку
             item.setTaken(true);
-            item.setTakenByUserId(currentUserId);
+            item.setTakenByUser(currentUser);
         }
-
         itemRepository.save(item);
         return true;
     }
-
 }
+
+
+

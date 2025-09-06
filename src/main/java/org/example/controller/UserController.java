@@ -17,14 +17,8 @@ public class UserController {
     public UserController(UserRepository userRepository) { this.userRepository = userRepository; }
 
     @GetMapping("/find")
-    public UserModel findUser(@RequestParam String name,
-                              @RequestParam String password,
-                              @RequestParam(required = false) String authToken) {
-        Optional<UserModel> user =
-                (authToken == null)
-                        ? userRepository.findByName(name)
-                        : userRepository.findByAuthToken(authToken);
-
+    public UserModel findUser(@RequestParam String name) {
+        Optional<UserModel> user = userRepository.findByName(name);
         return user.orElseThrow(() -> new RuntimeException("User not found"));
     }
 
@@ -42,3 +36,4 @@ public class UserController {
         }).orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
+
