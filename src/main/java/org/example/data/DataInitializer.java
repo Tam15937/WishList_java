@@ -1,12 +1,12 @@
-package org.example;
+package org.example.data;
 
 import jakarta.annotation.PostConstruct;
-import org.example.model.ListItemModel;
-import org.example.model.ListModel;
-import org.example.model.UserModel;
-import org.example.repository.ListItemRepository;
-import org.example.repository.ListRepository;
-import org.example.repository.UserRepository;
+import org.example.data.model.ListItemModel;
+import org.example.data.model.ListModel;
+import org.example.data.model.UserModel;
+import org.example.data.repository.ListItemRepository;
+import org.example.data.repository.ListRepository;
+import org.example.data.repository.UserRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +45,7 @@ public class DataInitializer {
                 item.setList(list);
                 boolean taken = (j % 4) < 2; // первые два не взяты, следующие два взяты и т.д.
                 item.setTaken(taken);
+                item.setTakenByUser(admin);
                 itemRepository.save(item);
             }
         }

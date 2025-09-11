@@ -1,114 +1,99 @@
-let users = [];
-let selectedUserId = null;
+let selectedListId = null;
+let currentUser_id = null;
+let lists = [];
 
-// Подключаемся к эндпоинту Spring WebSocket с SockJS fallback
-const socket = new SockJS('/ws');
-const stompClient = Stomp.over(socket);
-
-stompClient.connect({}, function (frame) {
-    console.log('Подключены к серверу WebSocket: ' + frame);
-
-    // Подписываемся на обновления wishlist
-    stompClient.subscribe('/topic/wishlist', function (messageOutput) {
-        console.log('Получено обновление от сервера:', messageOutput.body);
-        loadUsers();
-    });
-}, function (error) {
-    console.error('Ошибка подключения к WebSocket:', error);
-});
-
-// Функция отправки сообщения обновления wishlist
-function sendWishlistUpdate(data) {
-    if (stompClient && stompClient.connected) {
-        stompClient.send("/app/wishlist/update", {}, data);
-    }
+function loadCurrentUser() {
+    const cookie = document.cookie.split('; ').find(row => row.startsWith('user_id='));
+    if (cookie) currentUser_id = parseInt(cookie.split('=')[1]);
+    else currentUser_id = 1;
 }
 
-// Загрузка пользователей и списков - без изменений
-async function loadUsers() {
+async function loadLists() {
     try {
-        const res = await fetch('/api/users');
-        if (!res.ok) throw new Error('Неавторизован');
-        users = await res.json();
-        console.log('Полученные списки:', users);
-        renderUsers();
-        renderWishlist();
-        renderDeleteButton();
+        const res = await fetch('/lists');
+        if (!res.ok) throw new Error('Ошибка загрузки списков');
+        lists = await res.json();
+        renderUsersList();
     } catch (e) {
-        console.error('Ошибка загрузки списков:', e);
-        if (e.message === 'Неавторизован') {
-            alert('Сессия истекла. Пожалуйста, войдите заново.');
-            window.location.href = '/login';
-        }
+        console.error('Ошибка:', e);
+        alert('Не удалось загрузить списки.');
     }
 }
 
-function renderUsers() {
-    const ul = document.getElementById('userItems');
-    ul.innerHTML = '';
-    users.forEach(user => {
-        const li = document.createElement('li');
-        li.textContent = user.name || '(без названия)';
-        li.className = (user.id === selectedUserId) ? 'selected' : '';
-        li.onclick = () => {
-            selectedUserId = user.id; // id списка
-            renderUsers();
-            renderWishlist();
-            renderDeleteButton();
-        };
-        ul.appendChild(li);
-    });
-}
+function renderUsersList() {
+    const block = document.getElementById('userItems');
+    block.innerHTML = '';
 
-
-function renderWishlist() {
-    const block = document.getElementById('wishlistContent');
-    const user = users.find(u => u.id === selectedUserId);
-    if (!user) {
-        block.innerHTML = '<p>Выберите пользователя слева, чтобы увидеть его wishlist.</p>';
+    if (lists.length === 0) {
+        block.innerHTML = '<li><em>Списков пока нет</em></li>';
         return;
     }
-    let html = `<h2>Wishlist: ${user.name}</h2><ul>`;
-    user.wishlist.forEach((item, index) => {
+
+    lists.forEach(list => {
+        const li = document.createElement('li');
+        li.textContent = list.name;
+        li.style.cursor = 'pointer';
+        li.style.padding = '8px';
+        li.style.borderBottom = '1px solid #eee';
+        li.dataset.id = list.id;
+
+        li.addEventListener('click', () => {
+            selectedListId = list.id;
+            renderUsersList();
+            loadListItems(list.id);
+            renderDeleteAndEditButtons(list);
+        });
+
+        block.appendChild(li);
+    });
+}
+
+async function loadListItems(listId) {
+    try {
+        const res = await fetch(`/items/list/${listId}`);
+        if (!res.ok) throw new Error('Не удалось загрузить элементы списка');
+        const items = await res.json();
+        renderListItems(items);
+    } catch (e) {
+        console.error('Ошибка:', e);
+        alert('Ошибка загрузки подарков.');
+    }
+}
+
+function renderListItems(items) {
+    const block = document.getElementById('wishlistContent');
+    const list = lists.find(l => l.id === selectedListId);
+
+    if (!list) {
+        block.innerHTML = '<p>Выберите список слева.</p>';
+        return;
+    }
+
+    let html = `<h2>Wishlist: ${list.name}</h2><ul>`;
+    items.forEach(item => {
         const checked = item.taken ? 'checked' : '';
-        // Проверяем валидность ссылки
         let linkHtml = '';
-        if (item.link && typeof item.link === 'string' && item.link.trim() !== '' && /^https?:\/\//i.test(item.link.trim())) {
+        if (item.link && /^https?:\/\//i.test(item.link.trim())) {
             const urlEscaped = item.link.trim().replace(/"/g, '&quot;');
-            linkHtml = `<a href="${urlEscaped}" target="_blank" rel="noopener noreferrer" 
-                          style="margin-left: 12px; padding: 2px 6px; border: 1px solid #2196f3; border-radius: 3px; font-size: 0.9em; color: #2196f3; text-decoration: none;">
-                          ссылка
-                        </a>`;
+            linkHtml = `<a href="${urlEscaped}" target="_blank" rel="noopener noreferrer" style="margin-left: 12px; padding: 2px 6px; border: 1px solid #2196f3; border-radius: 3px; font-size: 0.9em; color: #2196f3; text-decoration: none;">ссылка</a>`;
         }
-        html += `<li>
-            <label style="display:flex; align-items:center;">
-                <input type="checkbox" data-index="${index}" ${checked} />
-                <span class="${item.taken ? 'taken' : ''}" style="margin-left: 8px;">${item.name}</span>
+        html += `
+            <li style="display: flex; align-items: center; margin: 8px 0; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="checkbox" data-item-id="${item.id}" ${checked} style="margin-right: 12px;" />
+                <span class="${item.taken ? 'taken' : ''}" style="flex-grow: 1; margin-left: 8px;">${item.name}</span>
                 ${linkHtml}
-            </label>
-        </li>`;
+            </li>`;
     });
     html += '</ul>';
     block.innerHTML = html;
 
     block.querySelectorAll('input[type=checkbox]').forEach(checkbox => {
         checkbox.addEventListener('change', async (e) => {
-            const idx = e.target.getAttribute('data-index');
+            const itemId = e.target.getAttribute('data-item-id');
             try {
-                const res = await fetch(`/api/toggle_item/${selectedUserId}/${idx}`, {
-                    method: 'POST'
-                });
-                if (!res.ok) {
-                    let errorMsg = 'Ошибка при отметке подарка';
-                    try {
-                        const data = await res.json();
-                        if (data && data.error) {
-                            errorMsg = data.error;
-                        }
-                    } catch (_) {}
-                    throw new Error(errorMsg);
-                }
-                // Обновление через WebSocket придёт
+                const res = await fetch(`/items/${itemId}/toggle?userId=${currentUser_id}`, { method: 'POST' });
+                if (!res.ok) throw new Error('Ошибка при изменении статуса');
+                loadListItems(selectedListId);
             } catch (err) {
                 alert(err.message);
                 e.target.checked = !e.target.checked;
@@ -117,81 +102,67 @@ function renderWishlist() {
     });
 }
 
-function getCookie(name) {
-    const cookieStr = document.cookie;
-    const cookies = cookieStr.split('; ').reduce((acc, current) => {
-        const [key, val] = current.split('=');
-        acc[key] = decodeURIComponent(val);
-        return acc;
-    }, {});
-    return cookies[name];
-}
-
-function renderDeleteButton() {
+function renderDeleteAndEditButtons(list) {
     const deleteSection = document.getElementById('deleteSection');
     deleteSection.innerHTML = '';
-    if (selectedUserId === null) return;
 
-    const user = users.find(u => u.id === selectedUserId);
-    if (!user) return;
+    const listOwnerId = list.user?.id;
+    if (!listOwnerId || listOwnerId !== currentUser_id) return;
 
-    const currentUserId = getCookie('user_id');
-    if (!user.user_id || !currentUserId) return;
-    if (String(currentUserId) !== String(user.user_id)) return;
-
-    // Кнопка "Редактировать список"
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Редактировать список';
-    editBtn.style.backgroundColor = '#4caf50'; // зеленая
+    editBtn.style.backgroundColor = '#4caf50';
     editBtn.style.color = 'white';
     editBtn.style.marginBottom = '10px';
-    editBtn.onclick = () => {
-        showEditListForm(user);
-    };
+    editBtn.style.padding = '8px 12px';
+    editBtn.style.border = 'none';
+    editBtn.style.borderRadius = '4px';
+    editBtn.style.cursor = 'pointer';
+    editBtn.onclick = () => showEditListForm(list);
     deleteSection.appendChild(editBtn);
 
-    // Кнопка "Удалить список"
     const delBtn = document.createElement('button');
     delBtn.textContent = 'Удалить список';
     delBtn.style.backgroundColor = '#e53935';
+    delBtn.style.color = 'white';
+    delBtn.style.padding = '8px 12px';
+    delBtn.style.border = 'none';
+    delBtn.style.borderRadius = '4px';
+    delBtn.style.cursor = 'pointer';
     delBtn.onclick = () => {
-        if (confirm('Вы уверены, что хотите удалить свой список?')) {
-            deleteList(selectedUserId);
-        }
+        if (confirm('Вы уверены, что хотите удалить этот список?')) deleteList(list.id);
     };
     deleteSection.appendChild(delBtn);
 }
 
 async function deleteList(id) {
     try {
-        const res = await fetch(`/api/delete_list/${id}`, { method: 'POST' });
+        const res = await fetch(`/lists/${id}`, { method: 'DELETE' });
         if (res.ok) {
-            alert('Список успешно удалён');
-            selectedUserId = null;
-            await loadUsers();
-            document.getElementById('wishlistContent').innerHTML = '<p>Выберите пользователя слева, чтобы увидеть его wishlist.</p>';
+            alert('Список удалён!');
+            selectedListId = null;
+            await loadLists();
+            document.getElementById('wishlistContent').innerHTML = '<p>Выберите список слева.</p>';
             document.getElementById('deleteSection').innerHTML = '';
-        } else if (res.status === 403) {
-            alert('Недостаточно прав для удаления списка');
         } else {
-            alert('Ошибка удаления списка');
+            alert('Ошибка удаления.');
         }
     } catch (e) {
-        alert('Ошибка сети при удалении');
-        console.error(e);
+        alert('Ошибка сети.');
     }
 }
 
 function showCreateListForm() {
+    selectedListId = null;
     const block = document.getElementById('wishlistContent');
-	block.innerHTML = `
-		<form id="createListForm">
-			<input type="text" id="listName" placeholder="Название списка" maxlength="30" required />
-			<div id="giftsContainer"></div>
-			<button type="button" class="addGiftBtn">Добавить подарок</button>
-			<button type="submit" class="saveListBtn">Сохранить лист</button>
-		</form>
-	`;
+    block.innerHTML = `
+        <form id="createListForm">
+            <input type="text" id="listName" placeholder="Название списка" maxlength="30" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
+            <div id="giftsContainer"></div>
+            <button type="button" class="addGiftBtn" style="margin-bottom: 10px; padding: 8px 12px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer;">Добавить подарок</button>
+            <button type="submit" class="saveListBtn" style="padding: 10px 15px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer;">Создать список</button>
+        </form>
+    `;
 
     const giftsContainer = document.getElementById('giftsContainer');
     const addGiftBtn = block.querySelector('.addGiftBtn');
@@ -199,17 +170,13 @@ function showCreateListForm() {
 
     addGiftInput();
 
-    addGiftBtn.onclick = () => {
-        addGiftInput();
-    };
+    addGiftBtn.onclick = () => addGiftInput();
 
     form.onsubmit = async (e) => {
         e.preventDefault();
         const listName = document.getElementById('listName').value.trim();
-        if (!listName) {
-            alert("Введите название списка!");
-            return;
-        }
+        if (!listName) { alert("Введите название списка!"); return; }
+
         const giftBlocks = giftsContainer.querySelectorAll('.giftBlock');
         const gifts = [];
         for (const block of giftBlocks) {
@@ -218,31 +185,32 @@ function showCreateListForm() {
             const nameVal = nameInput.value.trim();
             let linkVal = linkInput.value.trim();
             if (nameVal) {
-                // Проверка валидности ссылки: либо пустое, либо начинается с http:// или https://
-                if (linkVal && !/^https?:\/\//i.test(linkVal)) {
-                    alert("Ссылка должна начинаться с http:// или https:// или быть пустой");
-                    return;
-                }
+                if (linkVal && !/^https?:\/\//i.test(linkVal)) { alert("Ссылка должна начинаться с http:// или https://"); return; }
                 gifts.push({ name: nameVal, taken: false, link: linkVal });
             }
         }
-        if (gifts.length === 0) {
-            alert("Добавьте хотя бы один подарок!");
-            return;
-        }
+        if (gifts.length === 0) { alert("Добавьте хотя бы один подарок!"); return; }
 
         try {
-            const response = await fetch('/api/create_list', {
+            const response = await fetch('/lists', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: listName, wishlist: gifts })
+                body: JSON.stringify({
+                    name: listName,
+                    user: { id: currentUser_id },
+                    items: gifts // отправляем подарки в массиве
+                })
             });
-            if (!response.ok) throw new Error('Ошибка при сохранении');
-            alert('Список успешно сохранён!');
-            selectedUserId = null;
-            await loadUsers();
-            renderWishlist();
-            renderDeleteButton();
+            if (!response.ok) throw new Error('Ошибка при создании списка');
+
+            const createdList = await response.json();
+            alert('Список создан!');
+            await loadLists();
+            selectedListId = createdList.id;
+            renderUsersList();
+            loadListItems(createdList.id);
+            renderDeleteAndEditButtons(createdList);
+            block.innerHTML = '<p>Список создан.</p>';
         } catch (err) {
             alert('Ошибка: ' + err.message);
         }
@@ -250,13 +218,14 @@ function showCreateListForm() {
 }
 
 function showEditListForm(list) {
+    selectedListId = null;
     const block = document.getElementById('wishlistContent');
     block.innerHTML = `
         <form id="editListForm">
-            <input type="text" id="listName" placeholder="Название списка" maxlength="30" required />
+            <input type="text" id="listName" placeholder="Название списка" maxlength="30" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
             <div id="giftsContainer"></div>
-            <button type="button" class="addGiftBtn">Добавить подарок</button>
-            <button type="submit" class="saveListBtn">Сохранить изменения</button>
+            <button type="button" class="addGiftBtn" style="margin-bottom: 10px; padding: 8px 12px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer;">Добавить подарок</button>
+            <button type="submit" class="saveListBtn" style="padding: 10px 15px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer;">Сохранить изменения</button>
         </form>
     `;
 
@@ -264,72 +233,53 @@ function showEditListForm(list) {
     const addGiftBtn = block.querySelector('.addGiftBtn');
     const form = block.querySelector('#editListForm');
 
-    // Заполняем поля из существующего списка
     document.getElementById('listName').value = list.name || '';
 
-    if (Array.isArray(list.wishlist) && list.wishlist.length > 0) {
-        list.wishlist.forEach((item, i) => {
-            addGiftInput(item.name, item.link);
-        });
-    } else {
-        addGiftInput();
-    }
+    fetch(`/items/list/${list.id}`)
+        .then(r => r.json())
+        .then(items => items.forEach(item => addGiftInput(item.name, item.link)))
+        .catch(() => alert('Ошибка загрузки подарков'));
 
-    addGiftBtn.onclick = () => {
-        addGiftInput();
-    };
+    addGiftBtn.onclick = () => addGiftInput();
 
     form.onsubmit = async (e) => {
         e.preventDefault();
         const listName = document.getElementById('listName').value.trim();
-        if (!listName) {
-            alert("Введите название списка!");
-            return;
-        }
+        if (!listName) { alert("Введите название списка!"); return; }
 
         const giftBlocks = giftsContainer.querySelectorAll('.giftBlock');
         const gifts = [];
-
         for (const block of giftBlocks) {
             const nameInput = block.querySelector('.giftInputName');
             const linkInput = block.querySelector('.giftInputLink');
             const nameVal = nameInput.value.trim();
             let linkVal = linkInput.value.trim();
             if (nameVal) {
-                if (linkVal && !/^https?:\/\//i.test(linkVal)) {
-                    alert("Ссылка должна начинаться с http:// или https:// или быть пустой");
-                    return;
-                }
+                if (linkVal && !/^https?:\/\//i.test(linkVal)) { alert("Ссылка должна начинаться с http:// или https://"); return; }
                 gifts.push({ name: nameVal, taken: false, link: linkVal });
             }
         }
-        if (gifts.length === 0) {
-            alert("Добавьте хотя бы один подарок!");
-            return;
-        }
+        if (gifts.length === 0) { alert("Добавьте хотя бы один подарок!"); return; }
 
         try {
-            // Создаем новый список с обновленными данными
-            const createResp = await fetch('/api/create_list', {
+            const createRes = await fetch('/lists', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: listName, wishlist: gifts })
+                body: JSON.stringify({ name: listName })
             });
-            if (!createResp.ok) throw new Error('Ошибка при сохранении');
+            if (!createRes.ok) throw new Error('Ошибка создания нового списка');
 
-            // Удаляем старый список
-            const deleteResp = await fetch(`/api/delete_list/${list.id}`, { method: 'POST' });
-            if (!deleteResp.ok) {
-                alert('Ошибка при удалении старого списка после редактирования');
-            } else {
-                alert('Список успешно обновлён!');
-            }
+            const newList = await createRes.json();
+            const deleteRes = await fetch(`/lists/${list.id}`, { method: 'DELETE' });
+            if (!deleteRes.ok) alert('Ошибка удаления старого списка');
 
-            selectedUserId = null;
-            await loadUsers();
-            renderWishlist();
-            renderDeleteButton();
-
+            alert('Список обновлён!');
+            await loadLists();
+            selectedListId = newList.id;
+            renderUsersList();
+            loadListItems(newList.id);
+            renderDeleteAndEditButtons(newList);
+            block.innerHTML = '<p>Список обновлён. Выберите его слева.</p>';
         } catch (err) {
             alert('Ошибка: ' + err.message);
         }
@@ -349,27 +299,28 @@ function addGiftInput(name = '', link = '') {
     inputName.className = 'giftInputName';
     inputName.placeholder = `Подарок ${giftsContainer.children.length + 1}`;
     inputName.style.flex = '1';
-    inputName.maxLength = 40;  // ограничение в 40 символов
-    inputName.value = name;    // подставляем имя, если есть
+    inputName.maxLength = 40;
+    inputName.value = name;
 
     const inputLink = document.createElement('input');
     inputLink.type = 'text';
     inputLink.className = 'giftInputLink';
     inputLink.placeholder = 'Ссылка (опционально)';
     inputLink.style.width = '200px';
-    inputLink.value = link;    // подставляем ссылку, если есть
+    inputLink.value = link;
 
     block.appendChild(inputName);
     block.appendChild(inputLink);
-
     giftsContainer.appendChild(block);
 }
 
-document.getElementById('createListBtn').onclick = () => {
-    selectedUserId = null;
-    renderUsers();
-    showCreateListForm();
-};
+document.addEventListener('DOMContentLoaded', () => {
+    loadCurrentUser();
+    loadLists();
 
-// Инициализация
-loadUsers();
+    document.getElementById('createListBtn').onclick = () => showCreateListForm();
+    document.getElementById('logoutBtn').onclick = (e) => {
+        e.preventDefault();
+        alert('Выход отключен.');
+    };
+});

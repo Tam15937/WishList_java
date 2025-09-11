@@ -1,12 +1,12 @@
-package org.example.controller;
+package org.example.data.controller;
 
-import org.example.model.ListItemModel;
-import org.example.model.ListModel;
-import org.example.model.UserModel;
-import org.example.repository.ListItemRepository;
-import org.example.repository.ListRepository;
-import org.example.repository.UserRepository;
-import org.example.service.WishlistService;
+import org.example.data.model.ListItemModel;
+import org.example.data.model.ListModel;
+import org.example.data.model.UserModel;
+import org.example.data.repository.ListItemRepository;
+import org.example.data.repository.ListRepository;
+import org.example.data.repository.UserRepository;
+import org.example.data.service.WishlistService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +32,7 @@ public class ListItemController {
         this.userRepository = userRepository;
     }
 
+    // подгрузка элементов списка по id списка
     @GetMapping("/list/{listId}")
     public ResponseEntity<List<ListItemModel>> getItemsByListId(@PathVariable Long listId) {
         ListModel list = listRepository.findById(listId)
@@ -40,6 +41,7 @@ public class ListItemController {
         return ResponseEntity.ok(items);
     }
 
+    // добавление предмета
     @PostMapping("/list/{listId}")
     @ResponseStatus(HttpStatus.CREATED)
     public ListItemModel addItemToList(@PathVariable Long listId, @Valid @RequestBody ListItemModel item) {
@@ -48,6 +50,7 @@ public class ListItemController {
         return wishlistService.addItemToList(list, item);
     }
 
+    // удаление предмета
     @DeleteMapping("/{itemId}")
     public ResponseEntity<Void> deleteItemById(@PathVariable Long itemId) {
         ListItemModel item = itemRepository.findById(itemId)
@@ -57,7 +60,16 @@ public class ListItemController {
         }
         return ResponseEntity.notFound().build();
     }
+    // удаление предметов списка
+    @DeleteMapping("/list/{listId}")
+    public ResponseEntity<Void> deleteByList(@PathVariable Long listId) {
+        ListModel list = listRepository.findById(listId)
+                .orElseThrow(() -> new RuntimeException("List not found"));
+        wishlistService.deleteItemsByList(list);
+        return ResponseEntity.noContent().build();
+    }
 
+    // переключение статуса предмета (отмечен / не отмечен)
     @PostMapping("/{itemId}/toggle")
     public ResponseEntity<Void> toggleItemStatus(@PathVariable Long itemId, @RequestParam Long userId) {
         ListItemModel item = itemRepository.findById(itemId)
@@ -70,5 +82,9 @@ public class ListItemController {
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
+
+    /*
+        TODO по идее, больше предметы не должны ничего делать.
+     */
 }
 

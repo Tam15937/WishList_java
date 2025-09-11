@@ -1,7 +1,7 @@
-package org.example.repository;
+package org.example.data.repository;
 
-import org.example.model.ListModel;
-import org.example.model.UserModel;
+import org.example.data.model.ListModel;
+import org.example.data.model.UserModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface ListRepository extends JpaRepository<ListModel, Long> {
-    List<ListModel> findByUser(UserModel user);
+
 }
