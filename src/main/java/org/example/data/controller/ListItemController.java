@@ -60,14 +60,6 @@ public class ListItemController {
         }
         return ResponseEntity.notFound().build();
     }
-    // удаление предметов списка
-    @DeleteMapping("/list/{listId}")
-    public ResponseEntity<Void> deleteByList(@PathVariable Long listId) {
-        ListModel list = listRepository.findById(listId)
-                .orElseThrow(() -> new RuntimeException("List not found"));
-        wishlistService.deleteItemsByList(list);
-        return ResponseEntity.noContent().build();
-    }
 
     // переключение статуса предмета (отмечен / не отмечен)
     @PostMapping("/{itemId}/toggle")

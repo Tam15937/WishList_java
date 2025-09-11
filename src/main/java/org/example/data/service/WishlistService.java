@@ -29,12 +29,6 @@ public class WishlistService {
     }
 
     @Transactional
-    public void deleteItemsByList(ListModel list) {
-        List<ListItemModel> items = itemRepository.findByList(list);
-        itemRepository.deleteAll(items);
-    }
-
-    @Transactional
     public ListItemModel addItemToList(ListModel list, ListItemModel item) {
         item.setList(list);
         return itemRepository.save(item);

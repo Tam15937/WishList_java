@@ -11,5 +11,4 @@ import java.util.Optional;
 @Repository
 public interface ListItemRepository extends JpaRepository<ListItemModel, Long> {
     List<ListItemModel> findByList(ListModel list);
-    void deleteByList(ListModel List);
 }

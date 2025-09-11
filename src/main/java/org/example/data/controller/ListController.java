@@ -53,7 +53,6 @@ public class ListController {
         ListModel list = listRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("List not found"));
         listRepository.deleteById(id);
-        itemRepository.deleteByList(list);
     }
 
     /*
