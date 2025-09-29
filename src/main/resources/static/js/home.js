@@ -93,7 +93,11 @@ function renderListItems(items) {
             try {
                 const res = await fetch(`/items/${itemId}/toggle?userId=${currentUser_id}`, { method: 'POST' });
                 if (!res.ok) throw new Error('Ошибка при изменении статуса');
-                // Обновляем только состояние текущего чекбокса, не перезагружаем весь список
+
+                // Перерисовываем весь список заново
+                if (selectedListId) {
+                    loadListItems(selectedListId);
+                }
             } catch (err) {
                 alert(err.message);
                 e.target.checked = !e.target.checked; // Откатываем в случае ошибки
