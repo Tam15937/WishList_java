@@ -45,7 +45,11 @@ public class DataInitializer {
                 item.setList(list);
                 boolean taken = (j % 4) < 2; // первые два не взяты, следующие два взяты и т.д.
                 item.setTaken(taken);
-                item.setTakenByUser(admin);
+                if (taken) {
+                    item.setTakenByUser(admin);
+                } else {
+                    item.setTakenByUser(null);
+                }
                 itemRepository.save(item);
             }
         }

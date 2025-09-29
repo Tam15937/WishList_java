@@ -93,10 +93,10 @@ function renderListItems(items) {
             try {
                 const res = await fetch(`/items/${itemId}/toggle?userId=${currentUser_id}`, { method: 'POST' });
                 if (!res.ok) throw new Error('Ошибка при изменении статуса');
-                loadListItems(selectedListId);
+                // Обновляем только состояние текущего чекбокса, не перезагружаем весь список
             } catch (err) {
                 alert(err.message);
-                e.target.checked = !e.target.checked;
+                e.target.checked = !e.target.checked; // Откатываем в случае ошибки
             }
         });
     });
@@ -192,7 +192,7 @@ function showCreateListForm() {
         if (gifts.length === 0) { alert("Добавьте хотя бы один подарок!"); return; }
 
         try {
-            const response = await fetch('/lists', {
+            const response = await fetch('/lists/{id}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -218,14 +218,21 @@ function showCreateListForm() {
 }
 
 function showEditListForm(list) {
-    selectedListId = null;
+    selectedListId = list.id;
     const block = document.getElementById('wishlistContent');
     block.innerHTML = `
         <form id="editListForm">
-            <input type="text" id="listName" placeholder="Название списка" maxlength="30" required style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
+            <input type="text" id="listName" placeholder="Название списка" maxlength="30" required
+                style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px;" />
             <div id="giftsContainer"></div>
-            <button type="button" class="addGiftBtn" style="margin-bottom: 10px; padding: 8px 12px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer;">Добавить подарок</button>
-            <button type="submit" class="saveListBtn" style="padding: 10px 15px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer;">Сохранить изменения</button>
+            <button type="button" class="addGiftBtn"
+                style="margin-bottom: 10px; padding: 8px 12px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Добавить подарок
+            </button>
+            <button type="submit" class="saveListBtn"
+                style="padding: 10px 15px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Сохранить изменения
+            </button>
         </form>
     `;
 
@@ -233,8 +240,10 @@ function showEditListForm(list) {
     const addGiftBtn = block.querySelector('.addGiftBtn');
     const form = block.querySelector('#editListForm');
 
+    // Заполняем поле названия
     document.getElementById('listName').value = list.name || '';
 
+    // Загружаем подарки текущего списка с сервера
     fetch(`/items/list/${list.id}`)
         .then(r => r.json())
         .then(items => items.forEach(item => addGiftInput(item.name, item.link)))
@@ -245,8 +254,12 @@ function showEditListForm(list) {
     form.onsubmit = async (e) => {
         e.preventDefault();
         const listName = document.getElementById('listName').value.trim();
-        if (!listName) { alert("Введите название списка!"); return; }
+        if (!listName) {
+            alert("Введите название списка!");
+            return;
+        }
 
+        // Формируем список подарков из полей формы
         const giftBlocks = giftsContainer.querySelectorAll('.giftBlock');
         const gifts = [];
         for (const block of giftBlocks) {
@@ -254,39 +267,47 @@ function showEditListForm(list) {
             const linkInput = block.querySelector('.giftInputLink');
             const nameVal = nameInput.value.trim();
             let linkVal = linkInput.value.trim();
+
             if (nameVal) {
-                if (linkVal && !/^https?:\/\//i.test(linkVal)) { alert("Ссылка должна начинаться с http:// или https://"); return; }
-                gifts.push({ name: nameVal, taken: false, link: linkVal });
+                if (linkVal && !/^https?:\/\//i.test(linkVal)) {
+                    alert("Ссылка должна начинаться с http:// или https://");
+                    return;
+                }
+                gifts.push({ name: nameVal, link: linkVal});
             }
         }
-        if (gifts.length === 0) { alert("Добавьте хотя бы один подарок!"); return; }
+        if (gifts.length === 0) {
+            alert("Добавьте хотя бы один подарок!");
+            return;
+        }
 
         try {
-            const createRes = await fetch('/lists', {
-                method: 'POST',
+            // Отправляем PUT запрос на обновление списка с новыми элементами
+            const response = await fetch(`/lists/${selectedListId}`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: listName })
+                body: JSON.stringify({
+                    name: listName,
+                    user: { id: currentUser_id }, // желательно передавать, если контроллер обновляет пользователя
+                    items: gifts
+                })
             });
-            if (!createRes.ok) throw new Error('Ошибка создания нового списка');
+            if (!response.ok) throw new Error('Ошибка при обновлении списка');
 
-            const newList = await createRes.json();
-            const deleteRes = await fetch(`/lists/${list.id}`, { method: 'DELETE' });
-            if (!deleteRes.ok) alert('Ошибка удаления старого списка');
-
-            alert('Список обновлён!');
+            alert('Список успешно обновлён!');
+            selectedListId = null;
             await loadLists();
-            selectedListId = newList.id;
-            renderUsersList();
-            loadListItems(newList.id);
-            renderDeleteAndEditButtons(newList);
-            block.innerHTML = '<p>Список обновлён. Выберите его слева.</p>';
+            document.getElementById('wishlistContent').innerHTML = '<p>Выберите список слева.</p>';
+            document.getElementById('deleteSection').innerHTML = '';
         } catch (err) {
             alert('Ошибка: ' + err.message);
         }
     };
 }
 
-function addGiftInput(name = '', link = '') {
+
+
+function addGiftInput(name = '', link = '', taken = false) {
     const giftsContainer = document.getElementById('giftsContainer');
     const block = document.createElement('div');
     block.className = 'giftBlock';
@@ -313,6 +334,7 @@ function addGiftInput(name = '', link = '') {
     block.appendChild(inputLink);
     giftsContainer.appendChild(block);
 }
+
 
 document.addEventListener('DOMContentLoaded', () => {
     loadCurrentUser();
