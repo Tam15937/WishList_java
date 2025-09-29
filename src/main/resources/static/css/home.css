@@ -54,6 +54,13 @@ body {
     margin: 0;
 }
 
+#userItems li.selected {
+ background-color: #39f;
+}
+#userItems li:hover {
+    background-color: #b2d8ff;  /* #b2d8ff */
+}
+
 #userItems li,
 #wishlistContent li {
     height: calc(1em * var(--element-height-multiplier));
@@ -77,10 +84,7 @@ body {
     margin-bottom: 0.5em;
 }
 
-#userItems li.selected,
-#userItems li:hover {
-    background: #b2d8ff;
-}
+
 
 .taken {
     text-decoration: line-through;

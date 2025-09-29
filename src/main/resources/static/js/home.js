@@ -37,6 +37,11 @@ function renderUsersList() {
         li.style.borderBottom = '1px solid #eee';
         li.dataset.id = list.id;
 
+        // Добавляем выделение, если id совпадает с выбранным
+        if (list.id === selectedListId) {
+            li.classList.add('selected');
+        }
+
         li.addEventListener('click', () => {
             selectedListId = list.id;
             renderUsersList();
@@ -196,7 +201,7 @@ function showCreateListForm() {
         if (gifts.length === 0) { alert("Добавьте хотя бы один подарок!"); return; }
 
         try {
-            const response = await fetch('/lists/{id}', {
+            const response = await fetch('/lists', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
