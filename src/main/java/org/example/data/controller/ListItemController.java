@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.List;
 @RestController
 @RequestMapping("/items")
@@ -38,6 +39,8 @@ public class ListItemController {
         ListModel list = listRepository.findById(listId)
                 .orElseThrow(() -> new RuntimeException("List not found"));
         List<ListItemModel> items = wishlistService.findItemsByList(list);
+        // Сортируем по уникальному id (например, getId)
+        items.sort(Comparator.comparing(ListItemModel::getId));
         return ResponseEntity.ok(items);
     }
 
