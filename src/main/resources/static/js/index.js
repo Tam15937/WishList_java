@@ -194,7 +194,7 @@ const App = {
                 <div style="display: flex; flex-direction: column; height: 100%;">
                     <!-- Верхняя часть - основные кнопки -->
                     <div style="flex: 1;">
-                        <button @click="startCreateList" style="margin-bottom: 20px;">Создать свой лист</button>
+                        <button @click="startCreateList">Создать свой лист</button>
 
                         <div v-if="canEditDelete && selectedList && currentView === 'check'">
                             <button @click="editList(selectedList)" class="btn-edit">Редактировать список</button>
