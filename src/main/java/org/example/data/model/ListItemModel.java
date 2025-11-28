@@ -15,6 +15,7 @@ import lombok.Setter;
 public class ListItemModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -28,7 +29,7 @@ public class ListItemModel {
     private boolean taken;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "takenByUser_id", nullable = true)
+    @JoinColumn(name = "takenByUser_id", nullable = true)//taken_by_user
     @JsonBackReference
     private UserModel takenByUser;
-}
+}// ENTITY
