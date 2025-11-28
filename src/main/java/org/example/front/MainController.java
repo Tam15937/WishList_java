@@ -17,9 +17,9 @@ public class MainController {
     public String home(@RequestHeader(value = "User-Agent") String userAgent) throws IOException {
         ClassPathResource htmlFile;
         if (isMobile(userAgent)) {
-            htmlFile = new ClassPathResource("templates/home_mobile.html");
+            htmlFile = new ClassPathResource("templates/index.html");
         } else {
-            htmlFile = new ClassPathResource("templates/home.html");
+            htmlFile = new ClassPathResource("templates/index.html");
         }
         return StreamUtils.copyToString(htmlFile.getInputStream(), StandardCharsets.UTF_8);
     }
