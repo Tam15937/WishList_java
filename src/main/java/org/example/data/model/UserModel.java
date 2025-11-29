@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Getter
@@ -23,8 +25,15 @@ public class UserModel {
     private String name;
 
     @NotBlank
-    private String password;
+    private String passwordHash;
+
+    @Column(unique = true)
+    private String nameHash; // Хеш имени для аутентификации
 
     @Column(unique = true)
     private String authToken;
+
+    private LocalDateTime tokenExpiry;
+    private LocalDateTime lastLogin;
+    private Boolean active = true;
 }

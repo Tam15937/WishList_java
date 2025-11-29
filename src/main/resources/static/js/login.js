@@ -1,45 +1,59 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('loginForm');
-    const errorMsg = document.getElementById('errorMsg');
+const { createApp } = Vue;
 
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-
-        errorMsg.textContent = '';
-
-        if (!username || !password) {
-            errorMsg.textContent = 'Введите имя и пароль!';
-            return;
+createApp({
+    data() {
+        return {
+            username: '',
+            password: '',
+            loading: false,
+            error: ''
         }
+    },
+    methods: {
+        async login() {
+            this.loading = true;
+            this.error = '';
+            
+            try {
+                // Используем прямой fetch для логина (без токена)
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: this.username,
+                        password: this.password
+                    })
+                });
 
-        try {
-            const response = await fetch('/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
-            });
+                if (response.ok) {
+                    const data = await response.json();
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                errorMsg.textContent = errorData.error || 'Ошибка входа';
-                return;
+                    // Сохраняем токен в API клиенте
+                    apiClient.setAuthToken(data.authToken);
+
+                    // Перенаправляем на главную
+                    window.location.href = '/';
+                } else {
+                    const errorData = await response.json();
+                    this.error = errorData.error || 'Ошибка входа. Проверьте имя пользователя и пароль.';
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                this.error = 'Ошибка сети. Попробуйте еще раз.';
+            } finally {
+                this.loading = false;
             }
-
-            const data = await response.json();
-            if (data.token) {
-                localStorage.setItem('authToken', data.token);
-                // Можно сохранить username для отображения в UI, например
-                localStorage.setItem('username', username);
-                window.location.href = '/';
-            } else {
-                errorMsg.textContent = 'Ошибка: токен не получен';
-            }
-        } catch (error) {
-            console.error('Ошибка при запросе на логин:', error);
-            errorMsg.textContent = 'Ошибка соединения с сервером';
         }
-    };
-});
+    },
+    mounted() {
+        // Фокус на поле ввода имени пользователя
+        this.$nextTick(() => {
+            const usernameInput = document.querySelector('input[type="text"]');
+            if (usernameInput) {
+                usernameInput.focus();
+            }
+        });
+    }
+}).mount('#app');

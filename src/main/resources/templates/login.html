@@ -1,19 +1,27 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <title>Вход в Wishlist Hub</title>
-    <link rel="stylesheet" th:href="@{/css/login.css}" />
+    <meta charset="UTF-8">
+    <title>Login - Wishlist Hub</title>
+    <link rel="stylesheet" href="css/login.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 <body>
-<div class="container">
-    <form id="loginForm" action="/login" method="post">
-        <input type="text" id="username" name="username" required />
-        <input type="password" id="password" name="password" required />
-        <button type="submit">Войти</button>
-        <p id="errorMsg" style="color:red; min-height:30px; margin-top:9px;"></p>
-    </form>
+<div id="app">
+    <div class="container">
+        <form id="loginForm" @submit.prevent="login">
+            <h2>Wishlist Hub - Вход</h2>
+            <input type="text" v-model="username" placeholder="Имя пользователя" required>
+            <input type="password" v-model="password" placeholder="Пароль" required>
+            <button type="submit" :disabled="loading">
+                <span v-if="!loading">Войти</span>
+                <span v-else>Вход...</span>
+            </button>
+            <div id="errorMsg" v-if="error">{{ error }}</div>
+        </form>
+    </div>
 </div>
-<script th:src="@{/js/login.js}"></script>
+
+<script src="js/login.js"></script>
 </body>
 </html>
