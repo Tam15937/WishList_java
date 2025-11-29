@@ -7,10 +7,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.security.dto.TokenValidationResponse;
 import org.example.security.service.AuthService;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @Component
 public class AuthFilter extends OncePerRequestFilter {
@@ -26,7 +30,7 @@ public class AuthFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        return path.equals("/login") ||
+        return  path.equals("/login") ||
                 path.startsWith("/auth/") ||
                 path.startsWith("/css/") ||
                 path.startsWith("/js/") ||
@@ -41,54 +45,47 @@ public class AuthFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
-        String token = null;
+        String token = extractToken(request);
 
-        // 1. Проверяем Authorization header
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
+        if (token != null) {
+            TokenValidationResponse validation = authService.validateToken(token);
+            if (validation.isValid()) {
+                // Устанавливаем атрибуты для контроллера
+                request.setAttribute("userId", validation.getUserId());
+                request.setAttribute("username", validation.getUsername());
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
-        // 2. Если нет в header, проверяем cookie
-        else if (request.getCookies() != null) {
+
+        // Если не авторизован и это HTML запрос - редирект на логин
+        if (isHtmlRequest(request)) {
+            response.sendRedirect("/login");
+            return;
+        }
+
+        // Для API запросов - 401 ошибка
+        sendUnauthorizedError(response, "Authentication required");
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        // 1. Проверяем Authorization header
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        // 2. Проверяем cookie
+        if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("auth_token".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                    break;
+                    return cookie.getValue();
                 }
             }
         }
 
-        if (token == null) {
-            if (isHtmlRequest(request)) {
-                response.sendRedirect("/login");
-                return;
-            }
-            sendUnauthorizedError(response, "Missing or invalid authorization");
-            return;
-        }
-
-        TokenValidationResponse validation = authService.validateToken(token);
-
-        if (!validation.isValid()) {
-            if (isHtmlRequest(request)) {
-                // Удаляем невалидную cookie
-                Cookie invalidCookie = new Cookie("auth_token", "");
-                invalidCookie.setMaxAge(0);
-                invalidCookie.setPath("/");
-                response.addCookie(invalidCookie);
-                response.sendRedirect("/login");
-                return;
-            }
-            sendUnauthorizedError(response, "Invalid or expired token");
-            return;
-        }
-
-        request.setAttribute("userId", validation.getUserId());
-        request.setAttribute("username", validation.getUsername());
-
-        filterChain.doFilter(request, response);
+        return null;
     }
-
     private boolean isHtmlRequest(HttpServletRequest request) {
         String acceptHeader = request.getHeader("Accept");
         return acceptHeader != null && acceptHeader.contains("text/html");

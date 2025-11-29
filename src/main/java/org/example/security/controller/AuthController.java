@@ -35,7 +35,10 @@ public class AuthController {
             authCookie.setPath("/");
             authCookie.setSecure(false); // Для localhost - false, в production - true
             servletResponse.addCookie(authCookie);
-
+            Cookie userIdCookie = new Cookie("user_id", String.valueOf(response.getUserId()));
+            userIdCookie.setPath("/");
+            userIdCookie.setMaxAge(24 * 60 * 60);
+            servletResponse.addCookie(userIdCookie);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             Map<String, String> errorResponse = new HashMap<>();

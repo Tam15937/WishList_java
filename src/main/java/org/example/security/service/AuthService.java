@@ -75,7 +75,14 @@ public class AuthService {
         if (user == null) {
             return new TokenValidationResponse(null, null, false);
         }
-
+        System.out.println("=== TOKEN VALIDATION ===");
+        System.out.println("Token: " + token);
+        System.out.println("User found: " + (user != null));
+        if (user != null) {
+            System.out.println("Token expiry: " + user.getTokenExpiry());
+            System.out.println("Is after now: " + user.getTokenExpiry().isAfter(LocalDateTime.now()));
+            System.out.println("User active: " + user.getActive());
+        }
         boolean isValid = user.getTokenExpiry() != null &&
                 user.getTokenExpiry().isAfter(LocalDateTime.now()) &&
                 Boolean.TRUE.equals(user.getActive());
