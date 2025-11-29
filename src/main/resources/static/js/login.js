@@ -15,25 +15,19 @@ createApp({
             this.error = '';
             
             try {
-                // Используем прямой fetch для логина (без токена)
                 const response = await fetch('/auth/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
+                    headers: { 
+                        'Content-Type': 'application/json' 
                     },
                     body: JSON.stringify({
                         name: this.username,
                         password: this.password
                     })
                 });
-
+                
                 if (response.ok) {
-                    const data = await response.json();
-
-                    // Сохраняем токен в API клиенте
-                    apiClient.setAuthToken(data.authToken);
-
-                    // Перенаправляем на главную
+                    // Успешный вход - перенаправляем на главную
                     window.location.href = '/';
                 } else {
                     const errorData = await response.json();
