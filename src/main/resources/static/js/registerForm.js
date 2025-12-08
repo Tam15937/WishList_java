@@ -36,8 +36,7 @@ const RegisterForm = {
             this.error = '';
 
             try {
-                // 1. Регистрация
-                const registerResponse = await fetch('/auth/register', {
+                const response = await fetch('/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -46,33 +45,29 @@ const RegisterForm = {
                         name: this.username,
                         password: this.password,
                         confirmPassword: this.confirmPassword
-                    })
+                    }),
+                    credentials: 'include' // Важно для отправки/получения кук
                 });
 
-                if (registerResponse.ok) {
-                    // 2. Автоматический вход после регистрации
-                    const loginResponse = await fetch('/auth/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            name: this.username,
-                            password: this.password
-                        })
-                    });
+                if (response.ok) {
+                    // Парсим ответ с токеном
+                    const data = await response.json();
+                    console.log('Registration success:', data);
 
-                    if (loginResponse.ok) {
-                        // Успешная авторизация - перенаправляем на главную
+                    // 1. Устанавливаем куку user_id вручную (если сервер ее не установил)
+                    this.setUserIdCookie(data.userId);
+
+                    // 2. Устанавливаем куку auth_token вручную (если сервер ее не установил)
+                    this.setAuthTokenCookie(data.token);
+
+                    // 3. Перенаправляем на главную страницу
+                    setTimeout(() => {
                         window.location.href = '/';
-                    } else {
-                        // Если автоматический вход не удался
-                        this.$emit('registration-success');
-                        alert('Регистрация успешна! Теперь войдите в систему.');
-                    }
+                    }, 100);
+
                 } else {
-                    const errorData = await registerResponse.json();
-                    this.error = errorData.error || 'Ошибка регистрации';
+                    const errorData = await response.json();
+                    this.error = errorData.error || errorData.message || 'Ошибка регистрации';
                 }
             } catch (err) {
                 console.error('Register error:', err);
@@ -80,6 +75,22 @@ const RegisterForm = {
             } finally {
                 this.loading = false;
             }
+        },
+
+        // Устанавливаем куку user_id
+        setUserIdCookie(userId) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 дней
+
+            document.cookie = `user_id=${userId}; expires=${expires.toUTCString()}; path=/`;
+        },
+
+        // Устанавливаем куку auth_token
+        setAuthTokenCookie(token) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 дней
+
+            document.cookie = `auth_token=${token}; expires=${expires.toUTCString()}; path=/`;
         }
     },
     mounted() {
