@@ -36,7 +36,8 @@ const RegisterForm = {
             this.error = '';
 
             try {
-                const response = await fetch('/auth/register', {
+                // 1. Регистрация
+                const registerResponse = await fetch('/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -48,16 +49,29 @@ const RegisterForm = {
                     })
                 });
 
-                if (response.ok) {
-                    // Отправляем событие успешной регистрации
-                    this.$emit('registration-success');
+                if (registerResponse.ok) {
+                    // 2. Автоматический вход после регистрации
+                    const loginResponse = await fetch('/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name: this.username,
+                            password: this.password
+                        })
+                    });
 
-                    // Очищаем форму
-                    this.username = '';
-                    this.password = '';
-                    this.confirmPassword = '';
+                    if (loginResponse.ok) {
+                        // Успешная авторизация - перенаправляем на главную
+                        window.location.href = '/';
+                    } else {
+                        // Если автоматический вход не удался
+                        this.$emit('registration-success');
+                        alert('Регистрация успешна! Теперь войдите в систему.');
+                    }
                 } else {
-                    const errorData = await response.json();
+                    const errorData = await registerResponse.json();
                     this.error = errorData.error || 'Ошибка регистрации';
                 }
             } catch (err) {
