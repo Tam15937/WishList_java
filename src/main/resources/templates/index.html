@@ -7,28 +7,14 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 <body>
-<div id="app">
-    <div class="container">
-        <div class="form-tabs">
-            <button
-                    class="tab-btn"
-                    :class="{ 'active': activeForm === 'login' }"
-                    @click="switchToLogin">
-                Вход
-            </button>
-            <button
-                    class="tab-btn"
-                    :class="{ 'active': activeForm === 'register' }"
-                    @click="switchToRegister">
-                Регистрация
-            </button>
-        </div>
-
-        <!-- Контейнер для динамической загрузки форм -->
-        <div id="form-container"></div>
-    </div>
+<div class="auth-container">
+    <div id="app"></div>
 </div>
 
+<!-- Компоненты -->
+<script src="js/loginForm.js"></script>
+<script src="js/registerForm.js"></script>
+<!-- Главное приложение -->
 <script src="js/index.js"></script>
 </body>
 </html>

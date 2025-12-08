@@ -1,65 +1,63 @@
 const { createApp } = Vue;
 
-createApp({
+const App = {
+    components: {
+        LoginForm,
+        RegisterForm
+    },
     data() {
         return {
             activeForm: 'login' // 'login' или 'register'
         }
     },
+    computed: {
+        currentForm() {
+            return this.activeForm === 'login' ? 'LoginForm' : 'RegisterForm';
+        }
+    },
     methods: {
         switchToLogin() {
             this.activeForm = 'login';
-            this.loadForm('login');
         },
-
         switchToRegister() {
             this.activeForm = 'register';
-            this.loadForm('register');
         },
-
-        loadForm(formType) {
-            // 1. Очищаем контейнер и размонтируем предыдущее Vue приложение
-            const container = document.getElementById('form-container');
-
-            // Проверяем, есть ли смонтированное Vue приложение
-            if (container._vueApp) {
-                container._vueApp.unmount();
-                container._vueApp = null;
-            }
-
-            container.innerHTML = '';
-
-            // 2. Создаем новый скрипт
-            const script = document.createElement('script');
-
-            if (formType === 'login') {
-                script.src = 'js/login.js?v=' + Date.now(); // Добавляем версию для избежания кэша
-            } else {
-                script.src = 'js/register.js?v=' + Date.now();
-            }
-
-            // 3. Удаляем предыдущие скрипты форм
-            const oldScripts = document.querySelectorAll('script[src*="login.js"], script[src*="register.js"]');
-            oldScripts.forEach(oldScript => {
-                if (oldScript !== script && oldScript.parentNode) {
-                    oldScript.parentNode.removeChild(oldScript);
-                }
-            });
-
-            // 4. Добавляем новый скрипт
-            script.onload = function() {
-                console.log('Форма загружена:', formType);
-            };
-
-            script.onerror = function() {
-                console.error('Ошибка загрузки формы:', formType);
-            };
-
-            document.body.appendChild(script);
+        handleRegistrationSuccess() {
+            alert('Регистрация успешна! Теперь войдите в систему.');
+            this.switchToLogin();
         }
     },
     mounted() {
-        // Загружаем форму входа по умолчанию
-        this.loadForm('login');
-    }
-}).mount('#app');
+        // Автофокус при переключении форм
+        this.$watch('activeForm', (newForm) => {
+            this.$nextTick(() => {
+                const input = this.$el.querySelector('input[type="text"]');
+                if (input) input.focus();
+            });
+        });
+    },
+    template: `
+        <div class="container">
+            <div class="form-tabs">
+                <button
+                    class="tab-btn"
+                    :class="{ 'active': activeForm === 'login' }"
+                    @click="switchToLogin">
+                    Вход
+                </button>
+                <button
+                    class="tab-btn"
+                    :class="{ 'active': activeForm === 'register' }"
+                    @click="switchToRegister">
+                    Регистрация
+                </button>
+            </div>
+
+            <!-- Динамический компонент -->
+            <component :is="currentForm"
+                      @registration-success="handleRegistrationSuccess" />
+        </div>
+    `
+};
+
+createApp(App).mount('#app');
