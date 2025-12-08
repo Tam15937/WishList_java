@@ -4,6 +4,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.security.dto.AuthResponse;
 import org.example.security.dto.LoginRequest;
+import org.example.security.dto.RegisterRequest;
 import org.example.security.dto.TokenValidationResponse;
 import org.example.security.service.AuthService;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,32 @@ public class AuthController {
 
     public AuthController(AuthService authService) {
         this.authService = authService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletResponse servletResponse) {
+        try {
+            AuthResponse response = authService.register(request);
+
+            // Устанавливаем cookies так же, как при логине
+            jakarta.servlet.http.Cookie authCookie = new jakarta.servlet.http.Cookie("auth_token", response.getAuthToken());
+            authCookie.setHttpOnly(true);
+            authCookie.setMaxAge(24 * 60 * 60); // 24 часа
+            authCookie.setPath("/");
+            authCookie.setSecure(false);
+            servletResponse.addCookie(authCookie);
+
+            Cookie userIdCookie = new Cookie("user_id", String.valueOf(response.getUserId()));
+            userIdCookie.setPath("/");
+            userIdCookie.setMaxAge(24 * 60 * 60);
+            servletResponse.addCookie(userIdCookie);
+
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
     }
 
     @PostMapping("/login")

@@ -20,7 +20,7 @@ public class MainController {
     public MainController(AuthService authService) {
         this.authService = authService;
     }
-    @GetMapping(value = "/", produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping(value = {"/","/index"}, produces = MediaType.TEXT_HTML_VALUE)
     public String home(HttpServletRequest request) throws IOException {
         // Проверяем авторизацию через cookie напрямую
         String token = extractTokenFromCookies(request);
@@ -30,13 +30,13 @@ public class MainController {
             TokenValidationResponse validation = authService.validateToken(token);
             if (validation.isValid()) {
                 // Авторизован - показываем главную страницу
-                ClassPathResource htmlFile = new ClassPathResource("templates/index.html");
+                ClassPathResource htmlFile = new ClassPathResource("templates/mainpage.html");
                 return StreamUtils.copyToString(htmlFile.getInputStream(), StandardCharsets.UTF_8);
             }
         }
 
-        // Неавторизован - показываем страницу логина
-        ClassPathResource loginFile = new ClassPathResource("templates/login.html");
+        // Неавторизован - показываем начальную страницу
+        ClassPathResource loginFile = new ClassPathResource("templates/index.html");
         return StreamUtils.copyToString(loginFile.getInputStream(), StandardCharsets.UTF_8);
     }
 
@@ -49,11 +49,5 @@ public class MainController {
             }
         }
         return null;
-    }
-
-    @GetMapping(value = "/login", produces = MediaType.TEXT_HTML_VALUE)
-    public String loginPage() throws IOException {
-        ClassPathResource loginFile = new ClassPathResource("templates/login.html");
-        return StreamUtils.copyToString(loginFile.getInputStream(), StandardCharsets.UTF_8);
     }
 }

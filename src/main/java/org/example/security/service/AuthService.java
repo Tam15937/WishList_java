@@ -1,9 +1,11 @@
 package org.example.security.service;
 
+import jakarta.transaction.Transactional;
 import org.example.data.model.UserModel;
 import org.example.data.repository.UserRepository;
 import org.example.security.dto.AuthResponse;
 import org.example.security.dto.LoginRequest;
+import org.example.security.dto.RegisterRequest;
 import org.example.security.dto.TokenValidationResponse;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +25,60 @@ public class AuthService {
         this.userRepository = userRepository;
         this.passwordService = passwordService;
     }
+    @Transactional
+    public AuthResponse register(RegisterRequest request) {
+        System.out.println("=== REGISTRATION START ===");
+        System.out.println("Username: " + request.getName());
 
+        // 1. Проверяем, что пароли совпадают
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("Passwords do not match");
+        }
+
+        // 2. Проверяем длину пароля
+        if (request.getPassword().length() < 6) {
+            throw new RuntimeException("Password must be at least 6 characters long");
+        }
+
+        // 3. Проверяем длину имени пользователя
+        if (request.getName().length() < 3) {
+            throw new RuntimeException("Username must be at least 3 characters long");
+        }
+
+        // 4. Хешируем имя для поиска существующего пользователя
+        String nameHash = passwordService.hashUsername(request.getName());
+
+        // 5. Проверяем существование пользователя по хешу имени
+        boolean userExists = userRepository.existsByNameHash(nameHash);
+
+        if (userExists) {
+            throw new RuntimeException("User already exists");
+        }
+
+        // 6. Хешируем пароль
+        String passwordHash = passwordService.hashPassword(request.getPassword());
+
+        // 7. Генерируем токен
+        String authToken = generateToken();
+
+        // 8. Создаем нового пользователя
+        UserModel newUser = new UserModel();
+        newUser.setName(request.getName());
+        newUser.setNameHash(nameHash);
+        newUser.setPasswordHash(passwordHash);
+        newUser.setAuthToken(authToken);
+        newUser.setTokenExpiry(LocalDateTime.now().plusHours(24));
+        newUser.setLastLogin(LocalDateTime.now());
+        newUser.setActive(true);
+
+        // 9. Сохраняем пользователя
+        userRepository.save(newUser);
+
+        System.out.println("Registration SUCCESS for user: " + newUser.getName());
+        return new AuthResponse(authToken, newUser.getId(), newUser.getName(), "Registration successful");
+    }
+
+    @Transactional
     public AuthResponse authenticate(LoginRequest request) {
         System.out.println("=== AUTHENTICATION START ===");
         System.out.println("Username: " + request.getName());

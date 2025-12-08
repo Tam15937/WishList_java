@@ -30,13 +30,15 @@ public class AuthFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         String method = request.getMethod();
 
-        return  path.equals("/login") ||
+        return  path.equals("/auth/login") ||
+                path.equals("/auth/register") ||
                 path.startsWith("/auth/") ||
                 path.startsWith("/css/") ||
                 path.startsWith("/js/") ||
                 path.startsWith("/images/") ||
                 path.equals("/favicon.ico") ||
-                path.equals("/login.html") ||
+                path.equals("/") ||
+                path.equals("/index") ||
                 (path.equals("/users") && "POST".equalsIgnoreCase(method));
     }
 
@@ -58,9 +60,9 @@ public class AuthFilter extends OncePerRequestFilter {
             }
         }
 
-        // Если не авторизован и это HTML запрос - редирект на логин
+        // Если не авторизован и это HTML запрос - редирект на главную страницу
         if (isHtmlRequest(request)) {
-            response.sendRedirect("/login");
+            response.sendRedirect("/");
             return;
         }
 
