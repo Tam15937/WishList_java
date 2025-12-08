@@ -18,20 +18,27 @@ createApp({
         },
 
         loadForm(formType) {
-            // Очищаем контейнер
+            // 1. Очищаем контейнер и размонтируем предыдущее Vue приложение
             const container = document.getElementById('form-container');
+
+            // Проверяем, есть ли смонтированное Vue приложение
+            if (container._vueApp) {
+                container._vueApp.unmount();
+                container._vueApp = null;
+            }
+
             container.innerHTML = '';
 
-            // Создаем новый скрипт
+            // 2. Создаем новый скрипт
             const script = document.createElement('script');
 
             if (formType === 'login') {
-                script.src = 'js/login.js';
+                script.src = 'js/login.js?v=' + Date.now(); // Добавляем версию для избежания кэша
             } else {
-                script.src = 'js/register.js';
+                script.src = 'js/register.js?v=' + Date.now();
             }
 
-            // Удаляем предыдущие скрипты форм
+            // 3. Удаляем предыдущие скрипты форм
             const oldScripts = document.querySelectorAll('script[src*="login.js"], script[src*="register.js"]');
             oldScripts.forEach(oldScript => {
                 if (oldScript !== script && oldScript.parentNode) {
@@ -39,7 +46,15 @@ createApp({
                 }
             });
 
-            // Добавляем новый скрипт
+            // 4. Добавляем новый скрипт
+            script.onload = function() {
+                console.log('Форма загружена:', formType);
+            };
+
+            script.onerror = function() {
+                console.error('Ошибка загрузки формы:', formType);
+            };
+
             document.body.appendChild(script);
         }
     },
