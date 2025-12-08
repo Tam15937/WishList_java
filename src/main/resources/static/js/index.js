@@ -13,7 +13,8 @@ const App = {
             lists: [],
             wishlistItems: [],
             currentView: 'check', // 'check', 'create', 'edit'
-            editingList: null
+            editingList: null,
+            togglingItems: {}
         }
     },
     computed: {
@@ -52,14 +53,20 @@ const App = {
             }
         },
         async toggleItem(itemId) {
+            this.togglingItems[itemId] = true;  // Loading ON
+
             try {
                 const res = await fetch(`/items/${itemId}/toggle?userId=${this.currentUser_id}`, {
                     method: 'POST'
                 });
-                if (!res.ok) throw new Error('Ошибка при изменении статуса');
-                await this.loadListItems(this.selectedListId);
+                if (!res.ok) {
+                    throw new Error('Ошибка при изменении статуса');
+                }
+                await this.loadListItems(this.selectedListId);  // Обновляем с сервера
             } catch (err) {
                 alert(err.message);
+            } finally {
+                this.togglingItems[itemId] = false;  // Loading OFF
             }
         },
         selectList(list) {
