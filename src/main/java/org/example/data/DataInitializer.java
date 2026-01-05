@@ -9,12 +9,14 @@ import org.example.data.repository.ListRepository;
 import org.example.data.repository.UserRepository;
 
 import org.example.security.service.PasswordService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
 @Component
+@ConditionalOnProperty(name = "app.init-data", havingValue = "true", matchIfMissing = false)
 public class DataInitializer {
 
     private final UserRepository userRepository;

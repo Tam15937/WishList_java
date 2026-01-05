@@ -136,14 +136,16 @@ button[type="submit"]:disabled {
 
 /* Сообщения об ошибках */
 .error-msg {
-    padding: 0.5em;
-    background-color: rgba(244, 67, 54, 0.1);
-    color: #f44336;
+    padding: 0.8em;
+    background-color: #f44336; /* насыщенный красный фон */
+    color: white; /* белый текст для контраста */
     border-radius: 0.3em;
-    font-size: 0.9em;
+    font-size: 0.95em;
     text-align: center;
-    margin-top: 0.5em;
-    border: 0.05em solid rgba(244, 67, 54, 0.2);
+    margin: 0.5em auto; /* центрирование */
+    border: none;
+    width: 80%; /* чтобы не прилипало к краям */
+    box-sizing: border-box;
 }
 
 /* Индикаторы загрузки */

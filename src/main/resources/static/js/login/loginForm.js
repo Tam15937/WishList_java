@@ -62,7 +62,7 @@ const LoginForm = {
                 <span v-if="!loading">Войти</span>
                 <span v-else>Вход...</span>
             </button>
-            <div id="errorMsg" v-if="error">{{ error }}</div>
+            <div id="errorMsg" class="error-msg" v-if="error">{{ error }}</div>
         </form>
     `
 };

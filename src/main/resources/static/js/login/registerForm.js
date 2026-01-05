@@ -111,7 +111,7 @@ const RegisterForm = {
                 <span v-if="!loading">Зарегистрироваться</span>
                 <span v-else>Регистрация...</span>
             </button>
-            <div id="errorMsg" v-if="error">{{ error }}</div>
+            <div id="errorMsg" class="error-msg" v-if="error">{{ error }}</div>
         </form>
     `
 };
