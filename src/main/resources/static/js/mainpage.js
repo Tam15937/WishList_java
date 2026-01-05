@@ -11,6 +11,9 @@ const App = {
             selectedListId: null,
             currentUser_id: null,
             lists: [],
+            stompClient: null,  // WebSocket клиент
+            connected: false,   // статус подключения
+            currentSubscription: null,
             wishlistItems: [],
             currentView: 'check', // 'check', 'create', 'edit'
             editingList: null,
@@ -42,6 +45,63 @@ const App = {
                 alert('Не удалось загрузить списки.');
             }
         },
+        // Подключение WebSocket
+        connectWebSocket() {
+          const socket = new SockJS('/ws');  // эндпоинт из WebSocketConfig
+          this.stompClient = Stomp.over(socket);
+
+          this.stompClient.connect({},
+            (frame) => {
+              console.log('WebSocket подключён:', frame);
+              this.connected = true;
+
+              // Подписка на ГЛОБАЛЬНЫЕ обновления списков (всех клиентов)
+              this.stompClient.subscribe('/topic/global', (message) => {
+                const update = JSON.parse(message.body);
+                if (update.blockKey === 'lists-overview') {
+                  console.log('Обновляем список списков');
+                  this.loadLists();  // твоя функция перезагрузки
+                }
+              });
+            },
+            (error) => {
+              console.error('WebSocket ошибка:', error);
+              this.connected = false;
+              // Переподключение через 5 сек
+              setTimeout(() => this.connectWebSocket(), 5000);
+            }
+          );
+        },
+
+        // Отправить глобальное обновление списков (вызывать после create/delete)
+        sendGlobalListsUpdate() {
+          if (!this.stompClient || !this.connected) return;
+
+          const message = {
+            blockKey: 'lists-overview',
+            payload: JSON.stringify({ action: 'refresh_lists' })
+          };
+
+          this.stompClient.send('/app/global.update', {}, JSON.stringify(message));
+          console.log('Отправлено глобальное обновление списков');
+        },
+
+        sendCategoryUpdate(blockKey, categoryId = this.selectedListId) {
+            if (!this.stompClient || !this.connected || !categoryId) {
+                console.log('WebSocket не готов или список не выбран');
+                return;
+            }
+
+            const message = {
+                categoryId: categoryId,
+                blockKey: blockKey,
+                payload: JSON.stringify({ action: 'refresh_items' })
+            };
+
+            console.log(`📤 Категория ${categoryId}:`, message);
+            this.stompClient.send(`/app/category.update.${categoryId}`, {}, JSON.stringify(message));
+        },
+
         async loadListItems(listId) {
             try {
                 const res = await fetch(`/items/list/${listId}`);
@@ -63,6 +123,7 @@ const App = {
                     throw new Error('Ошибка при изменении статуса');
                 }
                 await this.loadListItems(this.selectedListId);  // Обновляем с сервера
+                this.sendCategoryUpdate('items-refresh'); // Оповещаем всех в ЭТОЙ категории (списке)
             } catch (err) {
                 alert(err.message);
             } finally {
@@ -72,7 +133,28 @@ const App = {
         selectList(list) {
             this.selectedListId = list.id;
             this.currentView = 'check';
+
+            // Отписываемся от предыдущей категории (если была)
+            if (this.currentSubscription) {
+                this.currentSubscription.unsubscribe();
+            }
+
+            // Подписываемся на обновления ЭТОГО списка
+            this.currentSubscription = this.stompClient.subscribe(`/topic/category.${list.id}`, (message) => {
+                const update = JSON.parse(message.body);
+                if (update.blockKey === 'items-refresh') {
+                    console.log(`Обновляем элементы списка ${list.id}`);
+                    this.loadListItems(list.id);  // Перезагружаем элементы
+                }
+            });
+
             this.loadListItems(list.id);
+        },
+        disconnectWebSocket() {
+            if (this.stompClient) {
+              this.stompClient.disconnect();
+              this.connected = false;
+            }
         },
         async createList(listData) {
             try {
@@ -92,6 +174,8 @@ const App = {
                 await this.loadLists();
                 this.currentView = 'check';
                 this.selectList(createdList);
+                // Оповестить ВСЕХ клиентов обновить списки
+                this.sendGlobalListsUpdate();
             } catch (err) {
                 alert('Ошибка: ' + err.message);
             }
@@ -114,6 +198,8 @@ const App = {
                 this.currentView = 'check';
                 this.selectedListId = listData.listId;
                 this.loadListItems(listData.listId);
+                this.sendGlobalListsUpdate();
+                this.sendCategoryUpdate('items-refresh', listData.listId);
             } catch (err) {
                 alert('Ошибка: ' + err.message);
             }
@@ -144,6 +230,8 @@ const App = {
                     this.selectedListId = null;
                     this.wishlistItems = [];
                     await this.loadLists();
+                    // Оповестить ВСЕХ клиентов обновить списки
+                    this.sendGlobalListsUpdate();
                 } else {
                     alert('Ошибка удаления.');
                 }
@@ -230,6 +318,13 @@ const App = {
     mounted() {
         this.loadCurrentUser();
         this.loadLists();
+        this.connectWebSocket();
+    },
+    beforeUnmount() {
+        if (this.currentSubscription) {
+                this.currentSubscription.unsubscribe();
+            }
+        this.disconnectWebSocket();
     },
     template: `
         <div class="container">

@@ -145,10 +145,12 @@ button:disabled {
 
 .gift-block input {
     flex: 1;
+    min-width: 0;  /* Позволяет сжиматься */
 }
 
-.gift-block input:last-child {
-    width: 200px;
+.gift-block .gift-input:last-child {
+    flex: 1.2;     /* Ссылка чуть шире имени */
+    max-width: 300px;  /* Ограничиваем сверху */
 }
 
 .remove-gift {
