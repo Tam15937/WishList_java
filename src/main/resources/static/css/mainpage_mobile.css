@@ -29,8 +29,7 @@ h2 {
 
 /* ===== ЛЕВАЯ ПАНЕЛЬ ===== */
 .sidebar.left {
-    width: 40%;
-    min-width: 230px;
+    width: 35%;
     background: #f0f0f0;
     border-right: 1px solid #ddd;
     padding: 1.5em 1em;
@@ -253,18 +252,3 @@ button[style*="background: #757575"] {
     width: 100%;
 }
 
-/* ===== ДВЕ КОЛОНКИ С СОХРАНЕНИЕМ СТРУКТУРЫ ===== */
-@media (max-width: 900px) {
-    body {
-        font-size: 0.95rem;
-    }
-
-    .sidebar.left {
-        width: 45%;
-        padding: 1em;
-    }
-
-    .right-column {
-        padding: 1em;
-    }
-}

@@ -1,340 +1,120 @@
-/* Базовые стили (для мобильных) */
-:root {
-    --element-height-multiplier: 1.5;
-}
+/* ===== Только ширина + центрирование ===== */
 
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #f7f7fa;
-    font-size: 1rem; /* Начните с 1rem */
-    box-sizing: border-box;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    min-height: 100vh;
+    padding: 0; /* Все отступы убраны */
 }
 
-*, *::before, *::after {
-    box-sizing: inherit;
-}
-
-/* Главный контейнер - для мобильных */
+/* Главный контейнер — ТОЛЬКО ширина */
 .auth-container {
-    width: 100%; /* На мобильных 100% */
-    max-width: 100%;
-    background: white;
-    border-radius: 0.3em;
-    box-shadow: 0 0.2em 1em rgba(0, 0, 0, 0.1);
+    width: 80%;           /* 80% до 1000px */
+    max-width: 80vw;      /* Не больше 80% от экрана */
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     overflow: hidden;
+}
+
+/* Контейнер Vue — без отступов */
+.container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0; /* Убраны отступы */
 }
 
 /* Вкладки */
 .form-tabs {
     display: flex;
+    border-bottom: 2px solid #ddd;
     background: #f0f0f0;
-    border-bottom: 0.1em solid #ddd;
 }
 
 .tab-btn {
     flex: 1;
-    height: calc(2em * var(--element-height-multiplier));
-    padding: 0 0.5em;
+    padding: 16px;
+    font-size: clamp(1.4em, 5vw, 2em);
     border: none;
     background: transparent;
-    color: #666;
     cursor: pointer;
-    font-size: 1em; /* Начните с 1em */
-    text-align: center;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: #666;
 }
 
 .tab-btn.active {
-    background: white;
+    background: #fff;
     color: #2196f3;
+    border-bottom: 3px solid #2196f3;
     font-weight: bold;
-    border-bottom: 0.2em solid #2196f3;
 }
 
-.tab-btn:hover:not(.active) {
-    background-color: #e7e7ef;
-}
-
-/* Контейнер формы */
-#form-container {
-    padding: 1em; /* Меньше padding на мобильных */
-}
-
-/* Формы */
+/* Формы — без отступов */
 form {
     display: flex;
     flex-direction: column;
-    gap: 0.75em;
+    gap: 20px;
+    width: 100%;
+    padding: 24px; /* Только внутренние отступы формы */
 }
 
-h2 {
-    margin: 0 0 1em 0;
-    color: #333;
+/* Элементы формы */
+form h2 {
+    margin: 0 0 20px 0;
     text-align: center;
-    font-size: 1.25em; /* Меньше на мобильных */
+    font-size: clamp(1.8em, 6vw, 2.8em);
+    color: #333;
 }
 
-/* Поля ввода */
 input[type="text"],
 input[type="password"] {
     width: 100%;
-    height: calc(1em * var(--element-height-multiplier));
-    line-height: calc(1em * var(--element-height-multiplier));
-    padding: 0 0.5em;
-    font-size: 1em; /* Начните с 1em */
-    border: 0.1em solid #ccc;
-    border-radius: 0.3em;
+    padding: 20px;
+    font-size: clamp(1.6em, 6vw, 2.4em);
+    border: 2px solid #ccc;
+    border-radius: 10px;
     box-sizing: border-box;
-    margin-bottom: 0.4em;
-    transition: border-color 0.3s;
 }
 
-input[type="text"]:focus,
-input[type="password"]:focus {
-    outline: none;
+input:focus {
     border-color: #2196f3;
-    box-shadow: 0 0 0 0.1em rgba(33, 150, 243, 0.2);
+    outline: none;
+    box-shadow: 0 0 8px rgba(33,150,243,0.3);
 }
 
-/* Кнопки */
 button[type="submit"] {
     width: 100%;
-    min-height: calc(1.25em * var(--element-height-multiplier));
-    padding: 0 0.5em;
+    padding: 22px;
+    font-size: clamp(1.7em, 6.5vw, 2.5em);
     border: none;
-    border-radius: 0.3em;
+    border-radius: 10px;
     background: #2196f3;
     color: #fff;
     cursor: pointer;
-    font-size: 1em; /* Начните с 1em */
-    text-align: center;
-    transition: background-color 0.3s;
-    box-sizing: border-box;
-    margin-top: 0.5em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5em;
 }
 
 button[type="submit"]:hover:not(:disabled) {
-    background-color: #0b7dda;
+    background: #0b7dda;
 }
 
-button[type="submit"]:disabled {
-    background: #aaa;
-    cursor: not-allowed;
-}
-
-/* Сообщения об ошибках */
 .error-msg {
-    padding: 0.8em;
-    background-color: #f44336; /* насыщенный красный фон */
-    color: white; /* белый текст для контраста */
-    border-radius: 0.3em;
-    font-size: 0.95em;
+    background: #f44336;
+    color: #fff;
+    padding: 18px;
+    border-radius: 8px;
+    font-size: clamp(1.4em, 5vw, 2em);
     text-align: center;
-    margin: 0.5em auto; /* центрирование */
-    border: none;
-    width: 80%; /* чтобы не прилипало к краям */
-    box-sizing: border-box;
 }
 
-/* Индикаторы загрузки */
-.button-loading {
-    font-style: italic;
-    opacity: 0.8;
-}
-
-.button-text {
-    transition: opacity 0.3s;
-}
-
-/* Для очень маленьких экранов (опционально) */
-@media (max-width: 480px) {
-    body {
-        padding: 10px;
-    }
-
+/* ===== 30% ширина после 1000px ===== */
+@media (min-width: 1000px) {
     .auth-container {
-        border-radius: 0.2em;
-    }
-
-    #form-container {
-        padding: 0.8em;
-    }
-
-    h2 {
-        font-size: 1.1em;
-        margin-bottom: 0.8em;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-        font-size: 0.9em;
-    }
-
-    button[type="submit"] {
-        font-size: 0.9em;
-    }
-}
-
-/* Планшеты и маленькие десктопы (768px и выше) */
-@media (min-width: 768px) {
-    body {
-        font-size: 1.1rem;
-    }
-
-    .auth-container {
-        max-width: 75%; /* Для планшетов 75% */
-    }
-
-    #form-container {
-        padding: 1.5em;
-    }
-
-    .tab-btn {
-        font-size: 1.1em;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-        font-size: 1.1em;
-    }
-
-    button[type="submit"] {
-        font-size: 1.1em;
-    }
-
-    h2 {
-        font-size: 1.5em;
-    }
-}
-
-/* Десктопы (1200px и выше) */
-@media (min-width: 1200px) {
-    body {
-        font-size: 1.25rem;
-    }
-
-    .auth-container {
-        max-width: 50%; /* Для десктопов 50% */
-    }
-
-    #form-container {
-        padding: 2em;
-    }
-
-    .tab-btn {
-        font-size: 1.25em;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-        font-size: 1.25em;
-    }
-
-    button[type="submit"] {
-        font-size: 1.25em;
-    }
-
-    h2 {
-        font-size: 1.8em;
-    }
-}
-
-/* Большие экраны (1920px и выше - FHD) */
-@media (min-width: 1920px) {
-    body {
-        font-size: 1.5rem;
-    }
-
-    .auth-container {
-        max-width: 40%; /* Для FHD 40% */
-    }
-
-    #form-container {
-        padding: 2.5em;
-    }
-
-    .tab-btn {
-        font-size: 1.5em;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-        font-size: 1.5em;
-    }
-
-    button[type="submit"] {
-        font-size: 1.5em;
-    }
-
-    h2 {
-        font-size: 2.1em;
-    }
-}
-
-/* Очень большие экраны (2560px и выше - 2K) */
-@media (min-width: 2560px) {
-    body {
-        font-size: 1.75rem;
-    }
-
-    .auth-container {
-        max-width: 35%;
-    }
-
-    .tab-btn {
-        font-size: 1.75em;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-        font-size: 1.75em;
-    }
-
-    button[type="submit"] {
-        font-size: 1.75em;
-    }
-
-    h2 {
-        font-size: 2.5em;
-    }
-}
-
-/* Ультраширокие экраны (3840px и выше - 4K) */
-@media (min-width: 3840px) {
-    body {
-        font-size: 2rem;
-    }
-
-    .auth-container {
-        max-width: 30%;
-    }
-
-    .tab-btn {
-        font-size: 2em;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-        font-size: 2em;
-    }
-
-    button[type="submit"] {
-        font-size: 2em;
-    }
-
-    h2 {
-        font-size: 3em;
+        width: 40%;
+        max-width: 40vw;
+        min-width: 600px; /* Минимум 400px */
     }
 }
