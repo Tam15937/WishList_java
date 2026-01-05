@@ -50,26 +50,56 @@ const CreateListForm = {
 
     template: `
         <form id="createListForm" @submit.prevent="submitForm">
-            <input type="text" v-model="newListName" placeholder="Название списка" maxlength="30" required />
+            <input
+                type="text"
+                v-model="newListName"
+                placeholder="Название списка"
+                maxlength="30"
+                required
+            />
+
             <div id="giftsContainer">
-                <div v-for="(gift, index) in gifts" :key="index" style="margin-bottom: 12px;">
-                    <input type="text" v-model="gift.name"
-                        :placeholder="'Подарок ' + (index + 1)" maxlength="40"
-                        class="giftInput" />
-                    <input type="text" v-model="gift.link"
-                        placeholder="Ссылка (опционально)" class="giftInput" />
-                    <button type="button" @click="removeGift(index)" class="remove-gift"
+                <div
+                    v-for="(gift, index) in gifts"
+                    :key="index"
+                    class="gift-block"
+                >
+                    <input
+                        type="text"
+                        v-model="gift.name"
+                        :placeholder="'Подарок ' + (index + 1)"
+                        maxlength="40"
+                        class="giftInputName"
+                    />
+
+                    <input
+                        type="text"
+                        v-model="gift.link"
+                        placeholder="Ссылка (опционально)"
+                        class="giftInputLink"
+                    />
+
+                    <button
+                        type="button"
+                        @click="removeGift(index)"
+                        class="remove-gift"
                         v-if="gifts.length > 1"
-                        style="background-color:#f44336; color:white; margin-top:4px;">
-                        Удалить
+                    >
+                        ×
                     </button>
                 </div>
             </div>
+
             <button type="button" class="addGiftBtn" @click="addGiftInput">
                 Добавить подарок
             </button>
-            <button type="submit" class="saveListBtn">Сохранить лист</button>
-            <button type="button" @click="cancelCreate" style="background:#757575;">
+            <button type="submit" class="saveListBtn">Создать список</button>
+            <button
+                type="button"
+                @click="cancelCreate"
+                class="cancel-btn"
+                style="background: #757575;"
+            >
                 Отмена
             </button>
         </form>

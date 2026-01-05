@@ -19,7 +19,7 @@ h2 {
     margin: 0 0 0.6em 0;
 }
 
-/* ===== ОСНОВНАЯ СЕТКА ===== */
+/* ===== КОНТЕЙНЕР (2 КОЛОНКИ) ===== */
 .container {
     display: flex;
     flex-direction: row;
@@ -27,7 +27,7 @@ h2 {
     overflow: hidden;
 }
 
-/* ===== ЛЕВАЯ ПАНЕЛЬ (списки) ===== */
+/* ===== ЛЕВАЯ ПАНЕЛЬ ===== */
 .sidebar.left {
     width: 40%;
     min-width: 230px;
@@ -116,7 +116,6 @@ h2 {
     justify-content: flex-start;
 }
 
-/* блок контента wish‑листов */
 #wishlistContent {
     width: 100%;
 }
@@ -158,7 +157,9 @@ h2 {
 
 input[type="text"],
 input[type="password"],
-.giftInput {
+.giftInput,
+.giftInputName,
+.giftInputLink {
     width: 100%;
     padding: 0.5em 0.8em;
     font-size: 1em;
@@ -166,23 +167,47 @@ input[type="password"],
     border-radius: 0.4em;
 }
 
+/* ===== ПОДАРКИ (строим в линию) ===== */
+.gift-block,
 #giftsContainer > div {
     display: flex;
-    flex-direction: column;
-    margin-bottom: 0.8em;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
 }
 
+/* Поля */
+.giftInputName {
+    flex: 1;
+    min-width: 0;
+}
+
+.giftInputLink {
+    flex: 1.3;
+    min-width: 0;
+}
+
+/* Крестик справа */
 .remove-gift {
-    margin-top: 0.4em;
-    background: #f44336;
-    color: white;
+    flex-shrink: 0;
+    background: transparent;
+    color: #f44336;
+    font-weight: bold;
+    font-size: 1.4em;
     border: none;
-    border-radius: 0.3em;
-    padding: 0.4em 0.8em;
+    cursor: pointer;
+    padding: 0 8px;
+    line-height: 1;
 }
 
 .remove-gift:hover {
-    background: #d32f2f;
+    color: #b71c1c;
+    transform: scale(1.1);
+}
+
+.remove-gift:active {
+    transform: scale(0.9);
 }
 
 /* ===== КНОПКИ ФОРМ ===== */
@@ -196,10 +221,6 @@ button {
     transition: background-color 0.25s;
 }
 
-button:disabled {
-    background: #aaa;
-}
-
 .addGiftBtn,
 .saveListBtn {
     background: #2196f3;
@@ -207,7 +228,7 @@ button:disabled {
 }
 
 .cancel-btn,
-button[style*="background:#757575"] {
+button[style*="background: #757575"] {
     background: #757575;
     color: #fff;
 }
@@ -220,15 +241,7 @@ button[style*="background:#757575"] {
     background: #e53935;
 }
 
-.btn-edit:hover {
-    background: #388e3c;
-}
-
-.btn-delete:hover {
-    background: #c62828;
-}
-
-/* ===== СЕКЦИЯ КНОПОК РЕДАКТИРОВАНИЯ ===== */
+/* ===== БЛОК УДАЛЕНИЯ ===== */
 #deleteSection {
     margin-top: 1.4em;
     display: flex;
@@ -236,16 +249,21 @@ button[style*="background:#757575"] {
     gap: 0.6em;
 }
 
-/* ===== НЕ МЕНЯЕМ НА 1 КОЛОНКУ! ===== */
+#deleteSection button {
+    width: 100%;
+}
+
+/* ===== ДВЕ КОЛОНКИ С СОХРАНЕНИЕМ СТРУКТУРЫ ===== */
 @media (max-width: 900px) {
-    /* Меняем только размеры текста и паддинги, но сохраняем две колонки */
     body {
         font-size: 0.95rem;
     }
+
     .sidebar.left {
         width: 45%;
         padding: 1em;
     }
+
     .right-column {
         padding: 1em;
     }

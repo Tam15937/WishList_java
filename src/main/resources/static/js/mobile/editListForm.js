@@ -65,25 +65,60 @@ const EditListForm = {
     },
     template: `
         <form id="editListForm" @submit.prevent="submitForm">
-            <input type="text" v-model="newListName" placeholder="Название списка" maxlength="30" required />
+            <input
+                type="text"
+                v-model="newListName"
+                placeholder="Название списка"
+                maxlength="30"
+                required
+            />
+
             <div id="giftsContainer">
-                <div v-for="(gift, i) in gifts" :key="i" style="margin-bottom:12px;">
-                    <input type="text" v-model="gift.name"
-                        :placeholder="'Подарок ' + (i + 1)" maxlength="40"
-                        class="giftInput" />
-                    <input type="text" v-model="gift.link"
-                        placeholder="Ссылка (опционально)" class="giftInput" />
-                    <button type="button" @click="removeGift(i)" v-if="gifts.length > 1"
-                        style="background:#f44336;color:white;margin-top:4px;">
-                        Удалить
+                <div
+                    v-for="(gift, i) in gifts"
+                    :key="i"
+                    class="gift-block"
+                >
+                    <input
+                        type="text"
+                        v-model="gift.name"
+                        :placeholder="'Подарок ' + (i + 1)"
+                        maxlength="40"
+                        class="giftInputName"
+                    />
+
+                    <input
+                        type="text"
+                        v-model="gift.link"
+                        placeholder="Ссылка (опционально)"
+                        class="giftInputLink"
+                    />
+
+                    <button
+                        type="button"
+                        @click="removeGift(i)"
+                        class="remove-gift"
+                        v-if="gifts.length > 1"
+                    >
+                        ×
                     </button>
                 </div>
             </div>
-            <button type="button" @click="addGiftInput" class="addGiftBtn">
+
+            <button
+                type="button"
+                class="addGiftBtn"
+                @click="addGiftInput"
+            >
                 Добавить подарок
             </button>
             <button type="submit" class="saveListBtn">Сохранить изменения</button>
-            <button type="button" @click="cancelEdit" style="background:#757575;">
+            <button
+                type="button"
+                @click="cancelEdit"
+                class="cancel-btn"
+                style="background: #757575;"
+            >
                 Отмена
             </button>
         </form>
