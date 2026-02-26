@@ -4,6 +4,7 @@ const LoginForm = {
         return {
             username: '',
             password: '',
+            passwordVisible: false,
             loading: false,
             error: ''
         }
@@ -57,7 +58,13 @@ const LoginForm = {
         <form id="loginForm" @submit.prevent="login">
             <h2>Вход в систему</h2>
             <input type="text" v-model="username" placeholder="Имя пользователя" required>
-            <input type="password" v-model="password" placeholder="Пароль" required>
+            <div class="password-wrapper">
+                <input :type="passwordVisible ? 'text' : 'password'" v-model="password" placeholder="Пароль" required>
+                <button type="button" class="toggle-password" @click="passwordVisible = !passwordVisible" @mousedown.prevent tabindex="-1">
+                    <span v-if="passwordVisible" class="status-dot">🟢</span>
+                    <span v-else class="status-dot">🔴</span>
+                </button>
+            </div>
             <button type="submit" :disabled="loading">
                 <span v-if="!loading">Войти</span>
                 <span v-else>Вход...</span>

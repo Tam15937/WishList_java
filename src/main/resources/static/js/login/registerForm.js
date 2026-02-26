@@ -4,6 +4,7 @@ const RegisterForm = {
         return {
             username: '',
             password: '',
+            passwordVisible: false,
             confirmPassword: '',
             loading: false,
             error: ''
@@ -90,8 +91,14 @@ const RegisterForm = {
         <form id="registerForm" @submit.prevent="register">
             <h2>Регистрация</h2>
             <input type="text" v-model="username" @input="username = username.replace(/[^a-zA-Z0-9а-яА-я]/g, '')" placeholder="Имя пользователя" required>
-            <input type="password" v-model="password" placeholder="Пароль" required>
-            <input type="password" v-model="confirmPassword" placeholder="Подтвердите пароль" required>
+            <div class="password-wrapper">
+                <input :type="passwordVisible ? 'text' : 'password'" v-model="password" placeholder="Пароль" required>
+                <button type="button" class="toggle-password" @click="passwordVisible = !passwordVisible" @mousedown.prevent tabindex="-1">
+                    <span v-if="passwordVisible" class="status-dot">🟢</span>
+                    <span v-else class="status-dot">🔴</span>
+                </button>
+            </div>
+            <input :type="passwordVisible ? 'text' : 'password'" v-model="confirmPassword" placeholder="Подтвердите пароль" required>
             <button type="submit" :disabled="loading">
                 <span v-if="!loading">Зарегистрироваться</span>
                 <span v-else>Регистрация...</span>
