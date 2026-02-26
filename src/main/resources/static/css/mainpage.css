@@ -185,6 +185,12 @@ button:disabled {
     margin-top: auto;
 }
 
+.my-taken-item {
+    border: 2px solid #4caf50 !important; /* Зеленая рамка */
+    background-color: rgba(76, 175, 80, 0.05); /* Легкий зеленый фон для наглядности */
+    border-radius: 8px; /* Чтобы рамка смотрелась аккуратно */
+}
+
 @media (min-width: 1200px) {
     body {
         font-size: 1.25rem;

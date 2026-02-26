@@ -17,21 +17,6 @@ const RegisterForm = {
                 return;
             }
 
-            if (this.username.length < 3) {
-                this.error = 'Имя пользователя должно быть не менее 3 символов';
-                return;
-            }
-
-            if (this.password.length < 6) {
-                this.error = 'Пароль должен быть не менее 6 символов';
-                return;
-            }
-
-            if (this.password !== this.confirmPassword) {
-                this.error = 'Пароли не совпадают';
-                return;
-            }
-
             this.loading = true;
             this.error = '';
 
@@ -42,9 +27,9 @@ const RegisterForm = {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        name: this.username,
-                        password: this.password,
-                        confirmPassword: this.confirmPassword
+                        name: this.username.trim(),
+                        password: this.password.trim(),
+                        confirmPassword: this.confirmPassword.trim()
                     }),
                     credentials: 'include' // Важно для отправки/получения кук
                 });
@@ -104,7 +89,7 @@ const RegisterForm = {
     template: `
         <form id="registerForm" @submit.prevent="register">
             <h2>Регистрация</h2>
-            <input type="text" v-model="username" placeholder="Имя пользователя" required>
+            <input type="text" v-model="username" @input="username = username.replace(/[^a-zA-Z0-9а-яА-я]/g, '')" placeholder="Имя пользователя" required>
             <input type="password" v-model="password" placeholder="Пароль" required>
             <input type="password" v-model="confirmPassword" placeholder="Подтвердите пароль" required>
             <button type="submit" :disabled="loading">

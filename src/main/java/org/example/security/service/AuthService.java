@@ -30,19 +30,23 @@ public class AuthService {
         System.out.println("=== REGISTRATION START ===");
         System.out.println("Username: " + request.getName());
 
+        if (!request.getName().matches("^[a-zA-Z0-9а-яА-Я]+$")) {
+            throw new RuntimeException("Имя пользователя может содержать только кирилицу, латиницу, цифры");
+        }
+
         // 1. Проверяем, что пароли совпадают
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new RuntimeException("Passwords do not match");
+            throw new RuntimeException("Пароли не совпадают");
         }
 
         // 2. Проверяем длину пароля
         if (request.getPassword().length() < 6) {
-            throw new RuntimeException("Password must be at least 6 characters long");
+            throw new RuntimeException("Минимальная длинна пароля 6 символов");
         }
 
         // 3. Проверяем длину имени пользователя
-        if (request.getName().length() < 3) {
-            throw new RuntimeException("Username must be at least 3 characters long");
+        if (request.getName().length() < 4) {
+            throw new RuntimeException("Минимальная длинна имени пользователя 4 символа");
         }
 
         // 4. Хешируем имя для поиска существующего пользователя
@@ -52,7 +56,7 @@ public class AuthService {
         boolean userExists = userRepository.existsByNameHash(nameHash);
 
         if (userExists) {
-            throw new RuntimeException("User already exists");
+            throw new RuntimeException("Имя пользователя занято");
         }
 
         // 6. Хешируем пароль
@@ -92,7 +96,7 @@ public class AuthService {
 
         if (userOpt.isEmpty()) {
             System.out.println("User not found by name hash");
-            throw new RuntimeException("Invalid username or password");
+            throw new RuntimeException("Неверное имя пользователя или пароль");
         }
 
         UserModel user = userOpt.get();
@@ -104,7 +108,7 @@ public class AuthService {
 
         if (!passwordValid) {
             System.out.println("Password verification failed");
-            throw new RuntimeException("Invalid username or password");
+            throw new RuntimeException("Неверное имя пользователя или пароль");
         }
 
         // 4. Генерируем новый токен

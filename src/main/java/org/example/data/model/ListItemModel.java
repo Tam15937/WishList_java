@@ -1,6 +1,7 @@
 package org.example.data.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -32,4 +33,9 @@ public class ListItemModel {
     @JoinColumn(name = "takenByUser_id", nullable = true)//taken_by_user
     @JsonBackReference
     private UserModel takenByUser;
+
+    @Transient // Это поле не создается в таблице БД
+    @JsonProperty("isMine") // Это поле БУДЕТ в JSON ответе
+    private boolean isMine;
+
 }// ENTITY

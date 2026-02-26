@@ -59,7 +59,6 @@ form {
     flex-direction: column;
     gap: 20px;
     width: 100%;
-    padding: 24px; /* Только внутренние отступы формы */
 }
 
 /* Элементы формы */

@@ -35,10 +35,24 @@ public class ListItemController {
 
     // подгрузка элементов списка по id списка
     @GetMapping("/list/{listId}")
-    public ResponseEntity<List<ListItemModel>> getItemsByListId(@PathVariable Long listId) {
+    public ResponseEntity<List<ListItemModel>> getItemsByListId(
+            @PathVariable Long listId,
+            @CookieValue(name = "user_id", required = false) Long currentUserId) {
+
         ListModel list = listRepository.findById(listId)
                 .orElseThrow(() -> new RuntimeException("List not found"));
         List<ListItemModel> items = wishlistService.findItemsByList(list);
+
+        // Проходим по списку и помечаем "мои" предметы
+        if (currentUserId != null) {
+            items.forEach(item -> {
+                if (item.isTaken() && item.getTakenByUser() != null) {
+                    // Если ID владельца совпадает с ID из куки (или сессии)
+                    item.setMine(item.getTakenByUser().getId().equals(currentUserId));
+                }
+            });
+        }
+
         // Сортируем по уникальному id (например, getId)
         items.sort(Comparator.comparing(ListItemModel::getId));
         return ResponseEntity.ok(items);

@@ -73,3 +73,5 @@ public class MainController {
                 ua.contains("mobile");
     }
 }
+
+

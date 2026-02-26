@@ -14,7 +14,7 @@ const CheckListForm = {
             <div v-if="selectedList">
                 <h2>Wishlist: {{ selectedList.name }}</h2>
                 <ul class="wishlist-items">
-                    <li v-for="item in wishlistItems" :key="item.id" class="wishlist-item">
+                    <li v-for="item in wishlistItems" :key="item.id" class="wishlist-item" :class="{ 'my-taken-item': item.isMine }">
                         <!-- ОСНОВНОЙ КОНТЕНТ li -->
                         <div style="display: flex; align-items: center; flex-grow: 1;">
                             <input type="checkbox"
