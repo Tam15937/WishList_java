@@ -27,9 +27,10 @@ const LoginForm = {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        name: this.username,
-                        password: this.password
-                    })
+                        name: this.username.trim(),
+                        password: this.password.trim()
+                    }),
+                    credentials: 'include' // Важно для отправки/получения кук
                 });
 
                 if (response.ok) {
