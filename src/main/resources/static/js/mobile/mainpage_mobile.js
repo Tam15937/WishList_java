@@ -47,15 +47,20 @@ const App = {
         },
         // Подключение WebSocket
         connectWebSocket() {
-          const socket = new SockJS('/ws');
-          this.stompClient = Stomp.over(socket);
 
-          const headers = {
-            'user-id': this.currentUser_id // Берем ID, который в mounted()
-          };
+            if (this.connected) return;
+            const socket = new SockJS('/ws');
+            this.stompClient = Stomp.over(socket);
 
-          // Передаем headers
-          this.stompClient.connect(headers, (frame) => {
+            this.stompClient.heartbeat.outgoing = 10000;
+            this.stompClient.heartbeat.incoming = 10000;
+
+            const headers = {
+            'user-id': this.currentUserId // Берем ID, который в mounted()
+            };
+
+            // Передаем headers
+            this.stompClient.connect(headers, (frame) => {
               console.log('WebSocket подключён:', frame);
               this.connected = true;
 
@@ -75,9 +80,9 @@ const App = {
               }
             },
             (error) => {
-              console.error('WebSocket ошибка:', error);
-              this.connected = false;
-              setTimeout(() => this.connectWebSocket(), 5000);
+                 this.connected = false;
+                 // Просто пробуем зайти снова через 5 секунд
+                 setTimeout(() => this.connectWebSocket(), 5000);
             }
           );
         },
@@ -240,7 +245,7 @@ const App = {
                 // Передаем заголовок user-id, чтобы Listener на бэкенде точно знал, кого отключать
                 this.stompClient.disconnect(() => {
                     console.log("WebSocket disconnected manually");
-                }, { 'user-id': this.currentUser_id });
+                }, { 'user-id': this.currentUserId });
 
                 this.connected = false;
             }
@@ -256,7 +261,7 @@ const App = {
     mounted() {
         this.loadCurrentUser();
         this.loadLists();
-        if (this.currentUser_id) {
+        if (this.currentUserId) {
             this.connectWebSocket();
         }
         window.addEventListener('beforeunload', this.handlePageUnload);

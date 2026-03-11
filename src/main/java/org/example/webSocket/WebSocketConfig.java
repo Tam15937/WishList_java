@@ -23,13 +23,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
-                .withSockJS();
+                .withSockJS()
+                .setHeartbeatTime(10000)
+                .setDisconnectDelay(10000);
     }
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic")
-                // 20 секунд, чтобы не нагружать сеть.
-                .setHeartbeatValue(new long[]{60000, 60000})
+                .setHeartbeatValue(new long[]{10000, 10000})
                 .setTaskScheduler(heartbeatScheduler());
 
         config.setApplicationDestinationPrefixes("/app");

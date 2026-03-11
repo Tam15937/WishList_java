@@ -9,7 +9,7 @@ const App = {
     data() {
         return {
             selectedListId: null,
-            currentUser_id: null,
+            currentUserId: null,
             lists: [],
             stompClient: null,  // WebSocket клиент
             connected: false,   // статус подключения
@@ -26,14 +26,14 @@ const App = {
         },
         canEditDelete() {
             if (!this.selectedList || !this.selectedList.user) return false;
-            return this.selectedList.user.id === this.currentUser_id;
+            return this.selectedList.user.id === this.currentUserId;
         }
     },
     methods: {
         loadCurrentUser() {
             const cookie = document.cookie.split('; ').find(row => row.startsWith('user_id='));
-            if (cookie) this.currentUser_id = parseInt(cookie.split('=')[1]);
-            else this.currentUser_id = 1;
+            if (cookie) this.currentUserId = parseInt(cookie.split('=')[1]);
+            else this.currentUserId = 1;
         },
         async loadLists() {
             try {
@@ -47,15 +47,20 @@ const App = {
         },
         // Подключение WebSocket
         connectWebSocket() {
-          const socket = new SockJS('/ws');
-          this.stompClient = Stomp.over(socket);
 
-          const headers = {
-            'user-id': this.currentUser_id // Берем ID, который в mounted()
-          };
+            if (this.connected) return;
+            const socket = new SockJS('/ws');
+            this.stompClient = Stomp.over(socket);
 
-          // Передаем headers
-          this.stompClient.connect(headers, (frame) => {
+            this.stompClient.heartbeat.outgoing = 10000;
+            this.stompClient.heartbeat.incoming = 10000;
+
+            const headers = {
+            'user-id': this.currentUserId // Берем ID, который в mounted()
+            };
+
+            // Передаем headers
+            this.stompClient.connect(headers, (frame) => {
               console.log('WebSocket подключён:', frame);
               this.connected = true;
 
@@ -75,12 +80,12 @@ const App = {
               }
             },
             (error) => {
-              console.error('WebSocket ошибка:', error);
-              this.connected = false;
-              setTimeout(() => this.connectWebSocket(), 5000);
+                this.connected = false;
+                // Просто пробуем зайти снова через 5 секунд
+                setTimeout(() => this.connectWebSocket(), 5000);
             }
-          );
-        },
+            );
+            },
 
         // Отправить глобальное обновление списков (вызывать после create/delete)
         sendGlobalListsUpdate() {
@@ -125,7 +130,7 @@ const App = {
             this.togglingItems[itemId] = true;  // Loading ON
 
             try {
-                const res = await fetch(`/items/${itemId}/toggle?userId=${this.currentUser_id}`, {
+                const res = await fetch(`/items/${itemId}/toggle?userId=${this.currentUserId}`, {
                     method: 'POST'
                 });
                 if (!res.ok) {
@@ -172,7 +177,7 @@ const App = {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name: listData.name,
-                        user: { id: this.currentUser_id },
+                        user: { id: this.currentUserId },
                         items: listData.gifts
                     })
                 });
@@ -196,7 +201,7 @@ const App = {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name: listData.name,
-                        user: { id: this.currentUser_id },
+                        user: { id: this.currentUserId },
                         items: listData.gifts
                     })
                 });
@@ -287,7 +292,7 @@ const App = {
         },
         clearAppData() {
             // Сбрасываем все данные Vue приложения
-            this.currentUser_id = null;
+            this.currentUserId = null;
             this.selectedListId = null;
             this.lists = [];
             this.wishlistItems = [];
@@ -313,7 +318,7 @@ const App = {
                 // Передаем заголовок user-id, чтобы Listener на бэкенде точно знал, кого отключать
                 this.stompClient.disconnect(() => {
                     console.log("WebSocket disconnected manually");
-                }, { 'user-id': this.currentUser_id });
+                }, { 'user-id': this.currentUserId });
 
                 this.connected = false;
             }
@@ -342,7 +347,7 @@ const App = {
     mounted() {
         this.loadCurrentUser();
         this.loadLists();
-        if (this.currentUser_id) {
+        if (this.currentUserId) {
                 this.connectWebSocket();
         }
         window.addEventListener('beforeunload', this.handlePageUnload);
@@ -374,19 +379,19 @@ const App = {
                     v-if="currentView === 'check'"
                     :selected-list="selectedList"
                     :wishlist-items="wishlistItems"
-                    :current-user_id="currentUser_id"
+                    :current-user_id="currentUserId"
                     @toggle-item="toggleItem"
                 />
                 <CreateListForm
                     v-else-if="currentView === 'create'"
-                    :current-user_id="currentUser_id"
+                    :current-user_id="currentUserId"
                     @create-list="createList"
                     @cancel-create="cancelCreate"
                 />
                 <EditListForm
                     v-else-if="currentView === 'edit'"
                     :editing-list="editingList"
-                    :current-user_id="currentUser_id"
+                    :current-user_id="currentUserId"
                     @update-list="updateList"
                     @cancel-edit="cancelEdit"
                 />
