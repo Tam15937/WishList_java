@@ -36,21 +36,7 @@ const RegisterForm = {
                 });
 
                 if (response.ok) {
-                    // Парсим ответ с токеном
-                    const data = await response.json();
-                    console.log('Registration success:', data);
-
-                    // 1. Устанавливаем куку user_id вручную (если сервер ее не установил)
-                    this.setUserIdCookie(data.userId);
-
-                    // 2. Устанавливаем куку auth_token вручную (если сервер ее не установил)
-                    this.setAuthTokenCookie(data.token);
-
-                    // 3. Перенаправляем на главную страницу
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 100);
-
+                    window.location.href = '/';
                 } else {
                     const errorData = await response.json();
                     this.error = errorData.error || errorData.message || 'Ошибка регистрации';
@@ -61,22 +47,6 @@ const RegisterForm = {
             } finally {
                 this.loading = false;
             }
-        },
-
-        // Устанавливаем куку user_id
-        setUserIdCookie(userId) {
-            const expires = new Date();
-            expires.setTime(expires.getTime() + (12 * 60 * 60 * 1000)); // 12 часов
-
-            document.cookie = `user_id=${userId}; expires=${expires.toUTCString()}; path=/`;
-        },
-
-        // Устанавливаем куку auth_token
-        setAuthTokenCookie(token) {
-            const expires = new Date();
-            expires.setTime(expires.getTime() + (12 * 60 * 60 * 1000)); // 12 часов
-
-            document.cookie = `auth_token=${token}; expires=${expires.toUTCString()}; path=/`;
         }
     },
     mounted() {
