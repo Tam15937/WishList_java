@@ -58,7 +58,7 @@ public class DataInitializer {
         admin.setAuthToken(generateInitialToken());
         admin.setTokenExpiry(LocalDateTime.now().plusYears(1));
         admin.setLastLogin(LocalDateTime.now());
-        admin.setActive(true);
+        admin.setActive(false);
 
         UserModel savedAdmin = userRepository.save(admin);
         System.out.println("Admin user saved with ID: " + savedAdmin.getId());
@@ -108,7 +108,7 @@ public class DataInitializer {
         user.setAuthToken(generateInitialToken());
         user.setTokenExpiry(LocalDateTime.now().plusYears(1));
         user.setLastLogin(LocalDateTime.now());
-        user.setActive(true);
+        user.setActive(false);
 
         userRepository.save(user);
 

@@ -45,22 +45,43 @@ const App = {
                 alert('Не удалось загрузить списки.');
             }
         },
+        // Подключение WebSocket
         connectWebSocket() {
-            const socket = new SockJS('/ws');
-            this.stompClient = Stomp.over(socket);
-            this.stompClient.connect({}, frame => {
-                console.log('WebSocket подключён:', frame);
-                this.connected = true;
-                this.stompClient.subscribe('/topic/global', message => {
-                    const update = JSON.parse(message.body);
-                    if (update.blockKey === 'lists-overview') this.loadLists();
-                });
-            }, err => {
-                console.error('WebSocket ошибка:', err);
-                this.connected = false;
-                setTimeout(() => this.connectWebSocket(), 5000);
-            });
+          const socket = new SockJS('/ws');
+          this.stompClient = Stomp.over(socket);
+
+          const headers = {
+            'user-id': this.currentUser_id // Берем ID, который в mounted()
+          };
+
+          // Передаем headers
+          this.stompClient.connect(headers, (frame) => {
+              console.log('WebSocket подключён:', frame);
+              this.connected = true;
+
+              //  подписки
+              this.stompClient.subscribe('/topic/global', (message) => {
+                const update = JSON.parse(message.body);
+                if (update.blockKey === 'lists-overview') {
+                  console.log('Обновляем список списков');
+                  this.loadLists();
+                }
+              });
+
+              // Если был выбран список, переподписываемся
+              if (this.selectedListId) {
+                  const list = this.lists.find(l => l.id === this.selectedListId);
+                  if (list) this.selectList(list);
+              }
+            },
+            (error) => {
+              console.error('WebSocket ошибка:', error);
+              this.connected = false;
+              setTimeout(() => this.connectWebSocket(), 5000);
+            }
+          );
         },
+
         sendGlobalListsUpdate() {
             if (!this.stompClient || !this.connected) return;
             this.stompClient.send(
@@ -209,6 +230,21 @@ const App = {
             if (localStorage) localStorage.clear();
             if (sessionStorage) sessionStorage.clear();
         },
+        handlePageUnload() {
+            // Вызываем принудительный разрыв перед тем, как страница исчезнет
+            this.disconnectWebSocket();
+        },
+
+        disconnectWebSocket() {
+            if (this.stompClient && this.connected) {
+                // Передаем заголовок user-id, чтобы Listener на бэкенде точно знал, кого отключать
+                this.stompClient.disconnect(() => {
+                    console.log("WebSocket disconnected manually");
+                }, { 'user-id': this.currentUser_id });
+
+                this.connected = false;
+            }
+        },
         redirectToLogin() {
             fetch('/auth/logout', { method: 'POST', credentials: 'include' })
                 .finally(() => {
@@ -220,11 +256,17 @@ const App = {
     mounted() {
         this.loadCurrentUser();
         this.loadLists();
-        this.connectWebSocket();
+        if (this.currentUser_id) {
+            this.connectWebSocket();
+        }
+        window.addEventListener('beforeunload', this.handlePageUnload);
     },
     beforeUnmount() {
-        if (this.currentSubscription) this.currentSubscription.unsubscribe();
-        if (this.stompClient) this.stompClient.disconnect();
+        if (this.currentSubscription) {
+            this.currentSubscription.unsubscribe();
+        }
+        window.removeEventListener('beforeunload', this.handlePageUnload);
+        this.disconnectWebSocket();
     },
     template: `
         <div class="container">

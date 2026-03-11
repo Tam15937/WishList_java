@@ -66,7 +66,7 @@ const RegisterForm = {
         // Устанавливаем куку user_id
         setUserIdCookie(userId) {
             const expires = new Date();
-            expires.setTime(expires.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 дней
+            expires.setTime(expires.getTime() + (12 * 60 * 60 * 1000)); // 12 часов
 
             document.cookie = `user_id=${userId}; expires=${expires.toUTCString()}; path=/`;
         },
@@ -74,7 +74,7 @@ const RegisterForm = {
         // Устанавливаем куку auth_token
         setAuthTokenCookie(token) {
             const expires = new Date();
-            expires.setTime(expires.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 дней
+            expires.setTime(expires.getTime() + (12 * 60 * 60 * 1000)); // 12 часов
 
             document.cookie = `auth_token=${token}; expires=${expires.toUTCString()}; path=/`;
         }

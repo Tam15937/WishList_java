@@ -35,8 +35,8 @@ public class UserModel {
 
     private LocalDateTime tokenExpiry;
     private LocalDateTime lastLogin;
-    private LocalDateTime createdAt; // ДОБАВЬТЕ ЭТО ПОЛЕ
-    private Boolean active = true;
+    private LocalDateTime createdAt;
+    private Boolean active = false;
 
     @PrePersist
     protected void onCreate() {

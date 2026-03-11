@@ -87,6 +87,11 @@ public class AuthService {
         System.out.println("=== AUTHENTICATION START ===");
         System.out.println("Username: " + request.getName());
 
+        if (!request.getName().matches("^[a-zA-Z0-9а-яА-Я]+$")) {
+            System.out.println("Не корректное имя пользователя");
+            throw new RuntimeException("Имя пользователя может содержать только кирилицу, латиницу, цифры");
+        }
+
         // 1. Хешируем имя для поиска
         String nameHash = passwordService.hashUsername(request.getName());
         System.out.println("Name hash: " + nameHash);
@@ -102,6 +107,11 @@ public class AuthService {
         UserModel user = userOpt.get();
         System.out.println("User found: " + user.getName());
 
+        // Проверяем не активен ли пользователь сейчас
+        if (user.getActive() && user.getTokenExpiry().isAfter(LocalDateTime.now())) {
+            throw new RuntimeException("Пользователь уже онлайн");
+        }
+
         // 3. Проверяем пароль с помощью verifyPassword
         boolean passwordValid = passwordService.verifyPassword(request.getPassword(), user.getPasswordHash());
         System.out.println("Password valid: " + passwordValid);
@@ -111,10 +121,11 @@ public class AuthService {
             throw new RuntimeException("Неверное имя пользователя или пароль");
         }
 
+        user.setActive(true);
         // 4. Генерируем новый токен
         String newToken = generateToken();
         user.setAuthToken(newToken);
-        user.setTokenExpiry(LocalDateTime.now().plusHours(24));
+        user.setTokenExpiry(LocalDateTime.now().plusHours(12));
         user.setLastLogin(LocalDateTime.now());
 
         userRepository.save(user);
@@ -128,23 +139,14 @@ public class AuthService {
             return new TokenValidationResponse(null, null, false);
         }
 
-        UserModel user = userRepository.findByAuthToken(token)
-                .orElse(null);
+        UserModel user = userRepository.findByAuthToken(token).orElse(null);
 
         if (user == null) {
             return new TokenValidationResponse(null, null, false);
         }
-/*        System.out.println("=== TOKEN VALIDATION ===");
-        System.out.println("Token: " + token);
-        System.out.println("User found: " + (user != null));
-        if (user != null) {
-            System.out.println("Token expiry: " + user.getTokenExpiry());
-            System.out.println("Is after now: " + user.getTokenExpiry().isAfter(LocalDateTime.now()));
-            System.out.println("User active: " + user.getActive());
-        }*/
+
         boolean isValid = user.getTokenExpiry() != null &&
-                user.getTokenExpiry().isAfter(LocalDateTime.now()) &&
-                Boolean.TRUE.equals(user.getActive());
+                user.getTokenExpiry().isAfter(LocalDateTime.now());
 
         return new TokenValidationResponse(user.getId(), user.getName(), isValid);
     }
