@@ -57,7 +57,7 @@ const LoginForm = {
     template: `
         <form id="loginForm" @submit.prevent="login">
             <h2>Вход в систему</h2>
-            <input type="text" v-model="username" placeholder="Имя пользователя" required>
+            <input type="text" v-model="username" @input="username = username.replace(/[^a-zA-Z0-9а-яА-я]/g, '')" placeholder="Имя пользователя" required>
             <div class="password-wrapper">
                 <input :type="passwordVisible ? 'text' : 'password'" v-model="password" placeholder="Пароль" required>
                 <button type="button" class="toggle-password" @click="passwordVisible = !passwordVisible" @mousedown.prevent tabindex="-1">
